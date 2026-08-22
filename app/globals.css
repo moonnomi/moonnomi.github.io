@@ -20,7 +20,7 @@
   --emerald: #57cc99;
   --orange: #ff6b35;
   --shell: min(1120px, calc(100% - 48px));
-  --stage-shell: min(1300px, calc(100% - 48px));
+  --stage-shell: min(1220px, calc(100% - 48px));
   --reading: min(720px, calc(100% - 48px));
   --header-height: 72px;
   --display: "Archivo Variable", "Arial Narrow", sans-serif;

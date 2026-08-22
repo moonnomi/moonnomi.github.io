@@ -15,7 +15,7 @@ CV, scholarship, and future college evaluators should quickly understand that th
 
 ## Direction and memorable moment
 
-Night Reading Room. A compact identity and purpose column faces one low-glare charcoal-teal featured sheet inside an onyx room. On wide desktops, the homepage header and hero alone expand to a 1300px editorial stage, reducing the outer black columns without changing the reading widths or vertical composition. The vortex re-inks, “nomi” types beside a teal caret, and the featured note opens like a dark page under a reading lamp; archive rows pull forward on hover or keyboard focus, making the growing body of writing feel like one catalogue without literal library props.
+Night Reading Room. A compact identity and purpose column faces one low-glare charcoal-teal featured sheet inside an onyx room. On wide desktops, the homepage header and hero alone expand to a 1220px editorial stage, reducing the outer black columns without making the featured sheet visually overpower the profile or changing the reading widths and vertical composition. The vortex re-inks, “nomi” types beside a teal caret, and the featured note opens like a dark page under a reading lamp; archive rows pull forward on hover or keyboard focus, making the growing body of writing feel like one catalogue without literal library props.
 
 ## Constraints and unresolved decisions
 
