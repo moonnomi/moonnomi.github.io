@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { siteContent } from "./content";
@@ -15,6 +16,7 @@ type SearchItem = {
 };
 
 export function SiteFrame({ children, searchItems }: { children: ReactNode; searchItems: SearchItem[] }) {
+  const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -94,7 +96,7 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
     <>
       <a className="skip-link" href="#main-content">Skip to content</a>
 
-      <header className="site-header">
+      <header className={`site-header${pathname === "/" ? " site-header--home" : ""}`}>
         <div className="shell header-inner">
           <Link className="brand" href="/">
             <VortexMark className="brand-vortex" />

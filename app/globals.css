@@ -20,6 +20,7 @@
   --emerald: #57cc99;
   --orange: #ff6b35;
   --shell: min(1120px, calc(100% - 48px));
+  --stage-shell: min(1300px, calc(100% - 48px));
   --reading: min(720px, calc(100% - 48px));
   --header-height: 72px;
   --display: "Archivo Variable", "Arial Narrow", sans-serif;
@@ -147,6 +148,10 @@ input {
   gap: 32px;
 }
 
+.site-header--home .header-inner {
+  width: var(--stage-shell);
+}
+
 .brand {
   display: inline-flex;
   align-items: center;
@@ -234,6 +239,7 @@ input {
 }
 
 .home-room-grid {
+  width: var(--stage-shell);
   min-height: calc(100svh - var(--header-height));
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(440px, 1.2fr);
@@ -1239,6 +1245,11 @@ input {
   :root {
     --shell: min(100% - 32px, 1120px);
     --header-height: 64px;
+  }
+
+  .site-header--home .header-inner,
+  .home-room-grid {
+    width: var(--shell);
   }
 
   .site-nav {
