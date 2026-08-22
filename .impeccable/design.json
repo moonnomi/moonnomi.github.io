@@ -1,0 +1,263 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-22T13:00:00+07:00",
+  "title": "Design System: Night Reading Room",
+  "extensions": {
+    "colorMeta": {
+      "room": {
+        "role": "neutral",
+        "displayName": "Room Onyx",
+        "canonical": "#0a090c",
+        "tonalRamp": ["oklch(15% 0.01 315)", "oklch(25% 0.01 315)", "oklch(35% 0.01 315)", "oklch(45% 0.01 315)", "oklch(58% 0.01 315)", "oklch(70% 0.01 315)", "oklch(83% 0.01 315)", "oklch(95% 0.01 315)"]
+      },
+      "room-raised": {
+        "role": "neutral",
+        "displayName": "Raised Room",
+        "canonical": "#131116",
+        "tonalRamp": ["oklch(15% 0.015 315)", "oklch(25% 0.015 315)", "oklch(35% 0.015 315)", "oklch(45% 0.015 315)", "oklch(58% 0.015 315)", "oklch(70% 0.015 315)", "oklch(83% 0.015 315)", "oklch(95% 0.015 315)"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Platinum Paper",
+        "canonical": "#f0edee",
+        "tonalRamp": ["oklch(15% 0.008 345)", "oklch(25% 0.008 345)", "oklch(35% 0.008 345)", "oklch(45% 0.008 345)", "oklch(58% 0.008 345)", "oklch(70% 0.008 345)", "oklch(83% 0.008 345)", "oklch(95% 0.008 345)"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Reading Ink",
+        "canonical": "#171419",
+        "tonalRamp": ["oklch(15% 0.01 330)", "oklch(25% 0.01 330)", "oklch(35% 0.01 330)", "oklch(45% 0.01 330)", "oklch(58% 0.01 330)", "oklch(70% 0.01 330)", "oklch(83% 0.01 330)", "oklch(95% 0.01 330)"]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Reading Ink",
+        "canonical": "#625b61",
+        "tonalRamp": ["oklch(15% 0.012 330)", "oklch(25% 0.012 330)", "oklch(35% 0.012 330)", "oklch(45% 0.012 330)", "oklch(58% 0.012 330)", "oklch(70% 0.012 330)", "oklch(83% 0.012 330)", "oklch(95% 0.012 330)"]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Platinum Text",
+        "canonical": "#f0edee",
+        "tonalRamp": ["oklch(15% 0.008 345)", "oklch(25% 0.008 345)", "oklch(35% 0.008 345)", "oklch(45% 0.008 345)", "oklch(58% 0.008 345)", "oklch(70% 0.008 345)", "oklch(83% 0.008 345)", "oklch(95% 0.008 345)"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Room Text",
+        "canonical": "#aaa5a8",
+        "tonalRamp": ["oklch(15% 0.008 335)", "oklch(25% 0.008 335)", "oklch(35% 0.008 335)", "oklch(45% 0.008 335)", "oklch(58% 0.008 335)", "oklch(70% 0.008 335)", "oklch(83% 0.008 335)", "oklch(95% 0.008 335)"]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "Faint Room Text",
+        "canonical": "#807a7f",
+        "tonalRamp": ["oklch(15% 0.01 330)", "oklch(25% 0.01 330)", "oklch(35% 0.01 330)", "oklch(45% 0.01 330)", "oklch(58% 0.01 330)", "oklch(70% 0.01 330)", "oklch(83% 0.01 330)", "oklch(95% 0.01 330)"]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Room Line",
+        "canonical": "#302d31",
+        "tonalRamp": ["oklch(15% 0.008 330)", "oklch(25% 0.008 330)", "oklch(35% 0.008 330)", "oklch(45% 0.008 330)", "oklch(58% 0.008 330)", "oklch(70% 0.008 330)", "oklch(83% 0.008 330)", "oklch(95% 0.008 330)"]
+      },
+      "paper-line": {
+        "role": "neutral",
+        "displayName": "Paper Line",
+        "canonical": "#c9c2c6",
+        "tonalRamp": ["oklch(15% 0.01 335)", "oklch(25% 0.01 335)", "oklch(35% 0.01 335)", "oklch(45% 0.01 335)", "oklch(58% 0.01 335)", "oklch(70% 0.01 335)", "oklch(83% 0.01 335)", "oklch(95% 0.01 335)"]
+      },
+      "teal": {
+        "role": "primary",
+        "displayName": "Edge Teal",
+        "canonical": "#38a3a5",
+        "tonalRamp": ["oklch(15% 0.08 195)", "oklch(25% 0.08 195)", "oklch(35% 0.08 195)", "oklch(45% 0.08 195)", "oklch(58% 0.08 195)", "oklch(70% 0.08 195)", "oklch(83% 0.08 195)", "oklch(95% 0.08 195)"]
+      },
+      "emerald": {
+        "role": "secondary",
+        "displayName": "Emerald Marker",
+        "canonical": "#57cc99",
+        "tonalRamp": ["oklch(15% 0.12 160)", "oklch(25% 0.12 160)", "oklch(35% 0.12 160)", "oklch(45% 0.12 160)", "oklch(58% 0.12 160)", "oklch(70% 0.12 160)", "oklch(83% 0.12 160)", "oklch(95% 0.12 160)"]
+      },
+      "orange": {
+        "role": "tertiary",
+        "displayName": "Orange Focus",
+        "canonical": "#ff6b35",
+        "tonalRamp": ["oklch(15% 0.17 40)", "oklch(25% 0.17 40)", "oklch(35% 0.17 40)", "oklch(45% 0.17 40)", "oklch(58% 0.17 40)", "oklch(70% 0.17 40)", "oklch(83% 0.17 40)", "oklch(95% 0.17 40)"]
+      },
+      "reading-teal": {
+        "role": "primary",
+        "displayName": "Reading Teal",
+        "canonical": "#256f71",
+        "tonalRamp": ["oklch(15% 0.065 195)", "oklch(25% 0.065 195)", "oklch(35% 0.065 195)", "oklch(45% 0.065 195)", "oklch(58% 0.065 195)", "oklch(70% 0.065 195)", "oklch(83% 0.065 195)", "oklch(95% 0.065 195)"]
+      },
+      "reading-teal-hover": {
+        "role": "primary",
+        "displayName": "Reading Teal Hover",
+        "canonical": "#1f6668",
+        "tonalRamp": ["oklch(15% 0.06 195)", "oklch(25% 0.06 195)", "oklch(35% 0.06 195)", "oklch(45% 0.06 195)", "oklch(58% 0.06 195)", "oklch(70% 0.06 195)", "oklch(83% 0.06 195)", "oklch(95% 0.06 195)"]
+      },
+      "mint-paper": {
+        "role": "neutral",
+        "displayName": "Mint Paper",
+        "canonical": "#d9ebe7",
+        "tonalRamp": ["oklch(15% 0.035 180)", "oklch(25% 0.035 180)", "oklch(35% 0.035 180)", "oklch(45% 0.035 180)", "oklch(58% 0.035 180)", "oklch(70% 0.035 180)", "oklch(83% 0.035 180)", "oklch(95% 0.035 180)"]
+      },
+      "evidence-mint": {
+        "role": "neutral",
+        "displayName": "Evidence Mint",
+        "canonical": "#dce9e6",
+        "tonalRamp": ["oklch(15% 0.025 180)", "oklch(25% 0.025 180)", "oklch(35% 0.025 180)", "oklch(45% 0.025 180)", "oklch(58% 0.025 180)", "oklch(70% 0.025 180)", "oklch(83% 0.025 180)", "oklch(95% 0.025 180)"]
+      },
+      "mint-ink": {
+        "role": "neutral",
+        "displayName": "Mint Ink",
+        "canonical": "#3e6f68",
+        "tonalRamp": ["oklch(15% 0.045 175)", "oklch(25% 0.045 175)", "oklch(35% 0.045 175)", "oklch(45% 0.045 175)", "oklch(58% 0.045 175)", "oklch(70% 0.045 175)", "oklch(83% 0.045 175)", "oklch(95% 0.045 175)"]
+      },
+      "article-ink": {
+        "role": "neutral",
+        "displayName": "Article Ink",
+        "canonical": "#3f393e",
+        "tonalRamp": ["oklch(15% 0.012 330)", "oklch(25% 0.012 330)", "oklch(35% 0.012 330)", "oklch(45% 0.012 330)", "oklch(58% 0.012 330)", "oklch(70% 0.012 330)", "oklch(83% 0.012 330)", "oklch(95% 0.012 330)"]
+      },
+      "placeholder-ink": {
+        "role": "neutral",
+        "displayName": "Placeholder Ink",
+        "canonical": "#817b80",
+        "tonalRamp": ["oklch(15% 0.01 330)", "oklch(25% 0.01 330)", "oklch(35% 0.01 330)", "oklch(45% 0.01 330)", "oklch(58% 0.01 330)", "oklch(70% 0.01 330)", "oklch(83% 0.01 330)", "oklch(95% 0.01 330)"]
+      }
+    },
+    "typographyMeta": {
+      "display": {"displayName": "Display", "purpose": "Short identity lines and major page titles."},
+      "headline": {"displayName": "Headline", "purpose": "Section openings and search headings."},
+      "title": {"displayName": "Title", "purpose": "Catalogue and compact component titles."},
+      "body": {"displayName": "Body", "purpose": "Interface explanation and ordinary prose."},
+      "reading": {"displayName": "Reading", "purpose": "Long-form article text held to a comfortable measure."},
+      "label": {"displayName": "Label", "purpose": "Navigation, tags, metadata, and small actions."},
+      "code": {"displayName": "Code", "purpose": "Code blocks, dates, and technical tabular metadata only."}
+    },
+    "shadows": [
+      {"name": "paper-rest", "value": "0 22px 58px rgba(0, 0, 0, 0.32)", "purpose": "Default featured reading sheet."},
+      {"name": "paper-lift", "value": "0 30px 72px rgba(0, 0, 0, 0.4)", "purpose": "Featured sheet hover and focus response."},
+      {"name": "about-paper", "value": "0 22px 58px rgba(0, 0, 0, 0.3)", "purpose": "Split about sheet."},
+      {"name": "article-paper", "value": "0 24px 66px rgba(0, 0, 0, 0.34)", "purpose": "Long-form article sheet."},
+      {"name": "search-layer", "value": "0 24px 64px rgba(0, 0, 0, 0.42)", "purpose": "Temporary search layer over the room."}
+    ],
+    "motion": [
+      {"name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Sheet lift, catalogue pull, and tonal state changes."},
+      {"name": "vortex-redraw", "value": "160ms", "purpose": "Fresh-ink settle between the homepage identity's related hand-drawn paths."},
+      {"name": "catalog-pull", "value": "320ms", "purpose": "Catalogue row movement and background response."},
+      {"name": "sheet-lift", "value": "360ms", "purpose": "Featured reading-sheet lift and shadow response."}
+    ],
+    "breakpoints": [
+      {"name": "layout-tighten", "value": "900px"},
+      {"name": "single-column", "value": "720px"},
+      {"name": "compact", "value": "520px"}
+    ]
+  },
+  "components": [
+    {
+      "name": "Vortex Identity Mark",
+      "kind": "custom",
+      "refersTo": "vortex-mark",
+      "description": "The static teal identity used in compact placements; the homepage cycles related paths through the same line treatment.",
+      "html": "<svg class=\"ds-vortex-mark\" viewBox=\"0 0 160 160\" aria-hidden=\"true\"><path d=\"M134 127 C110 129 79 121 57 102 C36 84 29 55 43 34 C56 15 87 12 108 24 C129 36 139 61 132 84 C126 105 101 113 81 102 C62 92 53 71 61 55 C68 41 85 40 99 48 C112 57 116 74 109 86 C103 97 89 98 79 90 C70 83 68 71 74 63\" /></svg>",
+      "css": ".ds-vortex-mark { display: block; width: 72px; height: 72px; overflow: visible; color: var(--teal, #38a3a5); } .ds-vortex-mark path { fill: none; stroke: currentColor; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }"
+    },
+    {
+      "name": "Navigation Link",
+      "kind": "nav",
+      "refersTo": "navigation-link",
+      "description": "Quiet square text navigation for the onyx header.",
+      "html": "<a class=\"ds-nav-link\" href=\"#\">Writing</a>",
+      "css": ".ds-nav-link { color: var(--muted, #aaa5a8); font-family: \"Public Sans Variable\", \"Segoe UI\", sans-serif; font-size: 13px; font-weight: 570; text-decoration: none; transition: color 180ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-nav-link:hover { color: var(--text, #f0edee); } .ds-nav-link:focus-visible { outline: 2px solid var(--orange, #ff6b35); outline-offset: 4px; }"
+    },
+    {
+      "name": "Featured Reading Sheet",
+      "kind": "card",
+      "refersTo": "featured-reading-sheet",
+      "description": "The primary light-paper entry point into the newest write-up.",
+      "html": "<a class=\"ds-featured-sheet\" href=\"#\"><span class=\"ds-featured-meta\">22 AUG 2026 · 7 MIN</span><strong>Reading-sheet title</strong><span>One restrained sentence describing the note.</span></a>",
+      "css": ".ds-featured-sheet { display: grid; gap: 22px; position: relative; overflow: hidden; background: var(--paper, #f0edee); color: var(--ink, #171419); padding: clamp(34px, 5vw, 58px); border-radius: 14px; box-shadow: 0 22px 58px rgba(0,0,0,.32); text-decoration: none; transition: transform 360ms cubic-bezier(0.16,1,0.3,1), box-shadow 360ms cubic-bezier(0.16,1,0.3,1); } .ds-featured-sheet::before { content: \"\"; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--teal, #38a3a5); } .ds-featured-sheet strong { font: 650 clamp(2rem,4vw,3.2rem)/1 \"Archivo Variable\", \"Arial Narrow\", sans-serif; letter-spacing: -.03em; } .ds-featured-meta { color: var(--ink-muted, #625b61); font: 10px/1.4 \"Cascadia Code\", Consolas, monospace; } .ds-featured-sheet:hover { transform: translateY(-6px); box-shadow: 0 30px 72px rgba(0,0,0,.4); } .ds-featured-sheet:focus-visible { outline: 2px solid var(--orange, #ff6b35); outline-offset: 4px; transform: translateY(-6px); }"
+    },
+    {
+      "name": "Catalogue Entry",
+      "kind": "custom",
+      "refersTo": "catalog-entry",
+      "description": "A ruled, full-width writing row that pulls forward without becoming a card.",
+      "html": "<a class=\"ds-catalog-entry\" href=\"#\"><time>22 AUG 2026</time><strong>Write-up title</strong><span>#static-analysis</span></a>",
+      "css": ".ds-catalog-entry { display: grid; grid-template-columns: 150px minmax(0,1fr) auto; gap: 28px; align-items: baseline; position: relative; border-top: 1px solid var(--line, #302d31); padding: 30px 20px 32px; color: var(--text, #f0edee); text-decoration: none; transition: transform 320ms cubic-bezier(0.16,1,0.3,1), background-color 320ms cubic-bezier(0.16,1,0.3,1); } .ds-catalog-entry time { color: var(--muted, #aaa5a8); font: 10px \"Cascadia Code\", Consolas, monospace; } .ds-catalog-entry strong { font: 630 1.35rem/1.25 \"Archivo Variable\", \"Arial Narrow\", sans-serif; } .ds-catalog-entry span { color: var(--faint, #807a7f); font: 11px \"Public Sans Variable\", \"Segoe UI\", sans-serif; } .ds-catalog-entry:hover { background: var(--room-raised, #131116); transform: translateX(10px); } .ds-catalog-entry:focus-visible { outline: 2px solid var(--orange, #ff6b35); outline-offset: 4px; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "A large editorial query field structured by a single teal rule.",
+      "html": "<label class=\"ds-search-label\">Search writing<input class=\"ds-search-field\" placeholder=\"Try static analysis\" /></label>",
+      "css": ".ds-search-label { display: grid; gap: 8px; color: var(--faint, #807a7f); font: 11px \"Public Sans Variable\", \"Segoe UI\", sans-serif; } .ds-search-field { width: 100%; border: 0; border-bottom: 1px solid var(--teal, #38a3a5); border-radius: 0; padding: 10px 0 16px; background: transparent; color: var(--text, #f0edee); caret-color: var(--orange, #ff6b35); font: 540 clamp(1.5rem,4vw,2.4rem) \"Archivo Variable\", \"Arial Narrow\", sans-serif; letter-spacing: -.02em; outline: none; } .ds-search-field::placeholder { color: var(--placeholder-ink, #817b80); } .ds-search-field:focus-visible { border-bottom-color: var(--emerald, #57cc99); }"
+    },
+    {
+      "name": "Topic Tag",
+      "kind": "chip",
+      "refersTo": "topic-tag-room",
+      "description": "Unboxed hash-prefixed taxonomy kept subordinate to the title.",
+      "html": "<span class=\"ds-topic-tag\">#static-analysis</span>",
+      "css": ".ds-topic-tag { color: var(--faint, #807a7f); background: transparent; font: 570 11px/1.4 \"Public Sans Variable\", \"Segoe UI\", sans-serif; }"
+    },
+    {
+      "name": "Copy Action",
+      "kind": "button",
+      "refersTo": "copy-action",
+      "description": "A small emerald text action with explicit focus and failure states.",
+      "html": "<button class=\"ds-copy-action\" type=\"button\">Copy</button>",
+      "css": ".ds-copy-action { border: 0; border-radius: 0; padding: 4px 0; background: transparent; color: var(--emerald, #57cc99); font: 570 11px/1.4 \"Public Sans Variable\", \"Segoe UI\", sans-serif; cursor: pointer; } .ds-copy-action:hover { color: var(--text, #f0edee); } .ds-copy-action:focus-visible { outline: 2px solid var(--orange, #ff6b35); outline-offset: 4px; } .ds-copy-action[data-state=\"error\"] { color: var(--orange, #ff6b35); }"
+    },
+    {
+      "name": "Evidence Panel",
+      "kind": "custom",
+      "refersTo": "evidence-panel",
+      "description": "A quiet mint insert for observations inside long-form article paper.",
+      "html": "<section class=\"ds-evidence\"><strong>Evidence</strong><p>Record the observable fact before interpreting it.</p></section>",
+      "css": ".ds-evidence { border-radius: 12px; padding: 15px 20px; background: var(--evidence-mint, #dce9e6); color: var(--ink, #171419); font: 400 16px/1.65 \"Public Sans Variable\", \"Segoe UI\", sans-serif; } .ds-evidence strong { display: block; margin-bottom: 6px; color: var(--mint-ink, #3e6f68); font-size: 11px; font-weight: 570; } .ds-evidence p { margin: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Night Reading Room",
+    "overview": "Night Reading Room treats the portfolio as a compact onyx interior where platinum paper holds the work worth reading. The voice is quiet, honest, editorial, and beginner-but-promising: credibility comes from clear explanation, visible progress, and care rather than from claims of mastery. The interface keeps room surfaces dark and nearly flat, then introduces physical contrast only where a reading sheet should feel tangible. A hand-drawn teal vortex identifies nomi: it redraws through closely related imperfect paths on the homepage and holds on one static frame elsewhere. Archivo supplies concise editorial authority, Public Sans keeps explanation direct, and Cascadia Code appears only where technical notation benefits.",
+    "keyCharacteristics": [
+      "Onyx room framing platinum reading paper",
+      "Hand-drawn teal vortex with one bounded arrival animation",
+      "Wide editorial headings paired with plain, readable prose",
+      "Flat tonal hierarchy with selective physical paper lift",
+      "Fine one-pixel rules and square interaction controls",
+      "Sparse mineral accents with fixed semantic jobs",
+      "Restrained row-pull and sheet-lift motion"
+    ],
+    "rules": [
+      {"name": "The Mineral Accent Rule", "body": "Teal guides, emerald confirms, and orange focuses or warns; never distribute all three as interchangeable decoration.", "section": "colors"},
+      {"name": "The Paper Contrast Rule", "body": "Light neutrals belong to reading sheets and information inserts; the surrounding site chrome stays in room tones.", "section": "colors"},
+      {"name": "The Short Display Rule", "body": "Keep Archivo display lines compact and deliberately short; explanation belongs in Public Sans below, not in six-line headings.", "section": "typography"},
+      {"name": "The Wide Room, Narrow Page Rule", "body": "Let the room feel spacious, but constrain explanation to readable measures and collapse structure before type becomes cramped.", "section": "layout"},
+      {"name": "The Flat Room Rule", "body": "Do not shadow ordinary navigation, catalogue rows, controls, or tonal inserts; elevation belongs only to paper and temporary overlay layers.", "section": "elevation"},
+      {"name": "The Sheet Geometry Rule", "body": "Reserve rounded corners for surfaces that read as sheets or contained technical inserts; interactive chrome remains square.", "section": "shapes"},
+      {"name": "The Vortex Identity Rule", "body": "Redrawing belongs only to the homepage arrival mark. Every identity placement uses the exact Edge Teal token at full opacity; compact marks share one static path, round caps, and no decorative container.", "section": "components"},
+      {"name": "The Restrained Response Rule", "body": "State changes may lift a reading sheet, pull a catalogue row, redraw the homepage identity, or shift text color; do not combine those responses on ordinary controls.", "section": "components"}
+    ],
+    "dos": [
+      "Do keep dark room chrome flat and separate regions with one-pixel Room Line rules.",
+      "Do use Platinum Paper for primary reading surfaces and 14px corners only while those surfaces remain inset.",
+      "Do reserve the 2px Orange Focus outline with a 4px offset for visible keyboard focus.",
+      "Do hold long-form article copy to 17px, 1.82 line-height, and a 70ch maximum.",
+      "Do preserve the 900px, 720px, and 520px responsive transformations when extending the surface.",
+      "Do reduce transitions to effectively zero when the visitor prefers reduced motion.",
+      "Do keep the animated vortex visible by default, pause it offscreen or in background tabs, and hold one static frame for reduced motion."
+    ],
+    "donts": [
+      "Don't introduce terminal-blog chrome, tactical dashboards, status telemetry, or exaggerated expertise cues.",
+      "Don't turn the reading-room metaphor into literal shelves, lamps, paper textures, or vintage decoration.",
+      "Don't add rounded pills, floating glass panels, gradients, or generic card stacks.",
+      "Don't spread teal, emerald, and orange evenly across a screen; each accent has a fixed job.",
+      "Don't shadow ordinary rows, controls, or mint inserts.",
+      "Don't let responsive compression narrow the reading measure by shrinking body text.",
+      "Don't rotate, glow, continuously distort, or independently redraw compact vortex marks."
+    ]
+  }
+}

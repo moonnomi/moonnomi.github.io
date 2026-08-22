@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0a090c">
+    <title>nomi studio</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/studio.css">
+    <script src="/studio.js" type="module"></script>
+  </head>
+  <body>
+    <!--
+    THESIS: A private writing workbench keeps publishing close to the portfolio without becoming a public admin product or a metrics dashboard.
+    OWN-WORLD: Onyx task chrome frames one platinum editing sheet; Public Sans carries the controls and teal marks the active document and primary save action.
+    STORY: nomi unlocks the local studio, selects or creates a write-up, saves a draft or publishes it, then opens the public preview.
+    FIRST VIEWPORT: A compact identity bar sits above a two-column workspace: the dated post index on the left and one full-height paper editor on the right, with Save beside Preview.
+    FORM: Night Reading Room Workbench, inherited local extension, seed 7fdc7752.
+    FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+    -->
+    <a id="skip-link" class="skip-link" href="#login-title">Skip to main content</a>
+
+    <main id="login-view" class="login-view">
+      <section class="login-sheet" aria-labelledby="login-title">
+        <img src="/favicon.svg" alt="" width="62" height="62">
+        <h1 id="login-title">nomi studio</h1>
+        <p>This editor only runs on your computer. Enter the password shown in the terminal.</p>
+        <form id="login-form">
+          <label for="studio-password">Studio password</label>
+          <input id="studio-password" name="password" type="password" autocomplete="current-password" required>
+          <button type="submit">Unlock studio</button>
+          <p id="login-error" class="form-message" role="alert"></p>
+        </form>
+      </section>
+    </main>
+
+    <div id="studio-view" class="studio-view" hidden>
+      <header class="studio-header">
+        <a class="studio-brand" href="http://localhost:3000/" target="_blank" rel="noreferrer">
+          <img src="/favicon.svg" alt="" width="28" height="28">
+          <span>nomi studio</span>
+        </a>
+        <nav class="studio-nav" aria-label="Studio sections">
+          <button class="is-active" type="button" data-view="posts" aria-current="page">Writing</button>
+          <button type="button" data-view="site">Site details</button>
+        </nav>
+        <div class="header-actions">
+          <a id="public-site-link" href="http://localhost:3000/" target="_blank" rel="noreferrer">Open site</a>
+          <button id="logout-button" type="button">Lock</button>
+        </div>
+      </header>
+
+      <main id="studio-main" class="studio-main">
+        <section id="posts-view" class="posts-workspace" aria-label="Writing editor">
+          <aside class="post-index">
+            <div class="post-index-heading">
+              <div>
+                <h1>Writing</h1>
+                <p id="post-count">0 posts</p>
+              </div>
+              <button id="new-post-button" class="small-action" type="button">New post</button>
+            </div>
+            <div id="post-list" class="post-list" aria-label="Posts"></div>
+          </aside>
+
+          <section class="editor-paper">
+            <div id="post-empty" class="editor-empty">
+              <h2>Select a post</h2>
+              <p>Choose a write-up from the list or create a new draft.</p>
+            </div>
+
+            <form id="post-form" hidden>
+              <div class="editor-heading">
+                <div>
+                  <h2 id="post-editor-title">Edit post</h2>
+                  <p id="post-reading-time">Reading time is calculated when you save.</p>
+                </div>
+                <label class="compact-field" for="post-status">
+                  Status
+                  <select id="post-status" name="status">
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="field-grid two-columns">
+                <label>
+                  Title
+                  <input id="post-title" name="title" maxlength="160" required>
+                </label>
+                <label>
+                  Date
+                  <input id="post-date" name="date" inputmode="numeric" placeholder="YYYY.MM.DD" maxlength="10" required>
+                </label>
+              </div>
+
+              <label>
+                Slug
+                <input id="post-slug" name="slug" maxlength="80" spellcheck="false" required>
+              </label>
+
+              <label>
+                Summary
+                <textarea id="post-summary" name="summary" rows="3" maxlength="420" required></textarea>
+              </label>
+
+              <label>
+                Tags
+                <input id="post-tags" name="tags" placeholder="static-analysis, pe, unpacking">
+                <span class="field-hint">Separate topics with commas.</span>
+              </label>
+
+              <label class="checkbox-field">
+                <input id="post-is-sample" name="isSample" type="checkbox">
+                <span>
+                  Example or sample write-up
+                  <small>Shows a clear “Sample” label on the public archive and article.</small>
+                </span>
+              </label>
+
+              <label>
+                Body
+                <textarea id="post-body" class="markdown-editor" name="body" rows="24" spellcheck="true" required></textarea>
+              </label>
+
+              <details class="formatting-help">
+                <summary>Formatting reference</summary>
+                <div>
+                  <p>Use <code>## Heading</code> for sections, blank lines for paragraphs, and <code>- item</code> for lists.</p>
+                  <p>Code fences may include a language and filename. Evidence blocks use <code>:::evidence</code>, one <code>label: value</code> per line, then <code>:::</code>.</p>
+                </div>
+              </details>
+
+              <div class="editor-actions">
+                <button id="delete-post-button" class="danger-action" type="button">Delete</button>
+                <div>
+                  <span id="preview-post-hint" class="preview-hint">Publish and save to open a preview.</span>
+                  <a id="preview-post-link" class="secondary-action is-disabled" target="_blank" rel="noreferrer" aria-disabled="true" tabindex="-1">Open preview</a>
+                  <button id="save-post-button" class="primary-action" type="submit">Save post</button>
+                </div>
+              </div>
+            </form>
+          </section>
+        </section>
+
+        <section id="site-view" class="site-settings" aria-labelledby="site-settings-title" hidden>
+          <form id="site-form" class="settings-paper">
+            <div class="settings-heading">
+              <div>
+                <h1 id="site-settings-title">Site details</h1>
+                <p>Update the recurring copy and links used across the portfolio.</p>
+              </div>
+              <button class="primary-action" type="submit">Save site details</button>
+            </div>
+
+            <div class="settings-section">
+              <h2>Identity</h2>
+              <div class="field-grid two-columns">
+                <label>Name<input id="site-name" name="name" maxlength="80" required></label>
+                <label>Role<input id="site-role" name="role" maxlength="140" required></label>
+              </div>
+              <label>Homepage introduction<textarea id="site-introduction" name="introduction" rows="3" maxlength="600" required></textarea></label>
+              <label>Footer line<input id="site-footer-tagline" name="footerTagline" maxlength="180" required></label>
+              <label>Writing page introduction<textarea id="site-writing-introduction" name="writingIntroduction" rows="2" maxlength="420" required></textarea></label>
+            </div>
+
+            <div class="settings-section">
+              <h2>About page</h2>
+              <label>Opening paragraph<textarea id="site-about-lead" name="aboutLead" rows="3" maxlength="700" required></textarea></label>
+              <label>Supporting paragraphs<textarea id="site-about-paragraphs" name="aboutParagraphs" rows="6"></textarea><span class="field-hint">Separate paragraphs with a blank line.</span></label>
+              <label>Learning topics<textarea id="site-learning-topics" name="learningTopics" rows="6"></textarea><span class="field-hint">One topic per line.</span></label>
+            </div>
+
+            <div class="settings-section">
+              <h2>Links</h2>
+              <div class="link-fields">
+                <fieldset>
+                  <legend>GitHub</legend>
+                  <label>Label<input id="github-label" maxlength="40"></label>
+                  <label>URL<input id="github-url" type="url" maxlength="500" placeholder="https://github.com/..."></label>
+                </fieldset>
+                <fieldset>
+                  <legend>Email</legend>
+                  <label>Label<input id="email-label" maxlength="40"></label>
+                  <label>Address<input id="email-url" maxlength="500" placeholder="name@example.com"></label>
+                </fieldset>
+                <fieldset>
+                  <legend>Resume</legend>
+                  <label>Label<input id="resume-label" maxlength="40"></label>
+                  <label>URL<input id="resume-url" maxlength="500" placeholder="/resume.pdf"></label>
+                </fieldset>
+              </div>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  </body>
+</html>

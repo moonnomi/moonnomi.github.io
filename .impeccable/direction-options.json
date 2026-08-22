@@ -1,0 +1,193 @@
+{
+  "title": "Choose the portfolio's visual world",
+  "question": "Each direction keeps the site quiet and writing-first, but gives the learning archive a different identity.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "The Night Reading Room",
+      "kicker": "THE ROLL",
+      "lineage": "library card catalogues and after-hours reading rooms",
+      "thesis": "Each write-up becomes a dated catalogue card that opens into a calm study sheet.",
+      "palette": ["#0a090c", "#f0edee", "#38a3a5", "#57cc99"],
+      "materials": ["matte charcoal shelves", "platinum index stock", "inked card edges"],
+      "viewport": "A compact identity column sits beside one featured reading card and the beginning of a chronological writing index.",
+      "risk": "It becomes nostalgic or gimmicky if drawers, stamps, and library props are used literally.",
+      "raised": [
+        {
+          "from": "Rhythm Machine",
+          "raise": "The writing index keeps one uninterrupted chronological rhythm with a single active marker."
+        },
+        {
+          "from": "Coiled Tower",
+          "raise": "Every new post visibly extends the same cumulative body of work instead of becoming an isolated card."
+        },
+        {
+          "from": "Pickling Calendar",
+          "raise": "Dates and learning stages remain immediately legible without turning progress into a score."
+        },
+        {
+          "from": "Tanaka Planes",
+          "raise": "Large empty fields and a few confident blocks prevent the archival idea from becoming busy."
+        }
+      ],
+      "wireframe": {
+        "cols": 12,
+        "rows": 10,
+        "regions": [
+          {"label": "quiet navigation", "x": 0, "y": 0, "w": 12, "h": 1},
+          {"label": "identity and purpose", "x": 0, "y": 2, "w": 4, "h": 4, "accent": true},
+          {"label": "featured reading card", "x": 5, "y": 2, "w": 7, "h": 3},
+          {"label": "chronological writing index", "x": 5, "y": 6, "w": 7, "h": 4}
+        ]
+      },
+      "comp": ".impeccable/mocks/decision/night-reading-room.webp"
+    },
+    {
+      "id": "model-pick",
+      "label": "The Process Folio",
+      "kicker": "IMPECCABLE'S PICK",
+      "lineage": "architecture-school process portfolios and pinned critique sheets",
+      "thesis": "The site reads as a curated sequence of working sheets where progress matters more than finished polish.",
+      "palette": ["#0a090c", "#f0edee", "#57cc99", "#ff6b35"],
+      "materials": ["graphite fields", "translucent vellum", "precise revision marks"],
+      "viewport": "One oversized current sheet leads while a narrow folio index reveals earlier studies underneath.",
+      "risk": "This is the most familiar scholarship-portfolio direction and can feel like design school rather than security research.",
+      "wireframe": {
+        "cols": 12,
+        "rows": 10,
+        "regions": [
+          {"label": "folio index", "x": 0, "y": 0, "w": 3, "h": 10, "accent": true},
+          {"label": "current study sheet", "x": 3, "y": 0, "w": 9, "h": 7},
+          {"label": "revision trail", "x": 3, "y": 7, "w": 9, "h": 3}
+        ]
+      },
+      "comp": ".impeccable/mocks/decision/process-folio.webp"
+    },
+    {
+      "id": "challenger-exposure",
+      "label": "The Exposure Record",
+      "verdict": "competitive",
+      "lineage": "darkroom exposure sheets and eleven-step zone records",
+      "thesis": "Each post separates what was observed, what remains uncertain, and what changed after another pass.",
+      "palette": ["#0a090c", "#f0edee", "#38a3a5", "#ff6b35"],
+      "materials": ["backlit tonal steps", "translucent overlays", "measured crosshatching"],
+      "viewport": "A bright study sheet overlaps a tonal learning scale, with the newest post occupying the clearest exposure zone.",
+      "case": "It communicates careful method and uncertainty unusually well, but the darkroom metaphor is less immediately readable than the catalogue.",
+      "risk": "Layering can recreate the visual density that the previous redesign removed.",
+      "wireframe": {
+        "cols": 12,
+        "rows": 10,
+        "regions": [
+          {"label": "tonal learning scale", "x": 0, "y": 0, "w": 12, "h": 2, "accent": true},
+          {"label": "current exposure sheet", "x": 1, "y": 2, "w": 8, "h": 6},
+          {"label": "known uncertain next", "x": 8, "y": 4, "w": 4, "h": 5}
+        ]
+      },
+      "comp": ".impeccable/mocks/decision/exposure-record.webp",
+      "hero": "https://impeccable.style/worlds/cards/operate-b-exposure-record-zone-sheets-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/operate-b-exposure-record-zone-sheets.webp"
+    },
+    {
+      "id": "challenger-rhythm",
+      "label": "The Rhythm Machine",
+      "verdict": "declined",
+      "lineage": "early-80s sixteen-step rhythm machines",
+      "thesis": "Posts appear as steps in a learning sequence rather than finished achievements.",
+      "palette": ["#0a090c", "#f0edee", "#38a3a5", "#ff6b35"],
+      "materials": ["charcoal instrument panel", "silkscreen labels", "single indicator light"],
+      "viewport": "A sixteen-step timeline places each post in one continuous sequence.",
+      "case": "The progress metaphor is strong, but it reads as a music tool before it reads as a writing portfolio.",
+      "kept": "One uninterrupted chronology and one precise active-state cue.",
+      "risk": "It would feel like a novelty interface and distract from reading.",
+      "comp": ".impeccable/mocks/decision/rhythm-machine.webp",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-drum-machine-step-row-hero.webp"
+    },
+    {
+      "id": "challenger-pickling",
+      "label": "The Maturation Calendar",
+      "verdict": "declined",
+      "lineage": "seasonal pickling logs and dated batch labels",
+      "thesis": "Learning is shown as work that develops over time rather than arriving complete.",
+      "palette": ["#0a090c", "#f0edee", "#57cc99", "#ff6b35"],
+      "materials": ["dated labels", "clear measurement bands", "seasonal color fields"],
+      "viewport": "Recent notes appear as dated batches with a short statement of what changed.",
+      "case": "The growth idea is honest, but the culinary world weakens technical credibility for this audience.",
+      "kept": "Dates and stages should make learning progress understandable at a glance.",
+      "risk": "The metaphor can feel cute rather than credible.",
+      "comp": ".impeccable/mocks/decision/maturation-calendar.webp",
+      "hero": "https://impeccable.style/worlds/cards/food-fermentation-culinary-theater-pickling-brine-calendar-hero.webp"
+    },
+    {
+      "id": "challenger-clay",
+      "label": "The Coiled Record",
+      "verdict": "declined",
+      "lineage": "large hand-built ceramic forms",
+      "thesis": "Every write-up adds another visible course to an unfinished structure.",
+      "palette": ["#0a090c", "#f0edee", "#38a3a5", "#ff6b35"],
+      "materials": ["layered bands", "compressed seams", "one unfinished course"],
+      "viewport": "A vertical chronology grows course by course beside a concise introduction.",
+      "case": "It expresses cumulative effort, but its physical metaphor obscures the fact that this is a writing portfolio.",
+      "kept": "Posts must feel cumulative, forming one visible body of work.",
+      "risk": "The sculptural treatment could overpower sparse content.",
+      "comp": ".impeccable/mocks/decision/coiled-record.webp",
+      "hero": "https://impeccable.style/worlds/cards/clay-ceramics-fracture-coiled-earth-tower-hero.webp"
+    },
+    {
+      "id": "challenger-pixorama",
+      "label": "The Learning Metropolis",
+      "verdict": "declined",
+      "lineage": "eBoy pixel-art city panoramas",
+      "thesis": "Every post becomes a discoverable place in an expanding field of interests.",
+      "palette": ["#0a090c", "#38a3a5", "#57cc99", "#ff6b35"],
+      "materials": ["hard pixel grid", "integer scaling", "hidden detail"],
+      "viewport": "A compact pixel landscape maps the current learning areas and opens individual posts.",
+      "case": "It is memorable, but it misrepresents a writing-first portfolio and requires artwork the author does not have.",
+      "kept": "Closer reading should reveal small details grounded in the actual posts.",
+      "risk": "It can look game-like and juvenile in an application context.",
+      "comp": ".impeccable/mocks/decision/learning-metropolis.webp",
+      "hero": "https://impeccable.style/worlds/cards/eboy-pixorama-metropolis-hero.webp"
+    },
+    {
+      "id": "challenger-tanaka",
+      "label": "The Geometric Portrait",
+      "verdict": "declined",
+      "lineage": "Ikko Tanaka's reduced geometric posters",
+      "thesis": "A few changing planes represent the interests that gradually form the author's profile.",
+      "palette": ["#0a090c", "#f0edee", "#38a3a5", "#ff6b35"],
+      "materials": ["flat planes", "strict grid", "large quiet fields"],
+      "viewport": "A responsive abstract portrait shares the first viewport with a short introduction and latest post.",
+      "case": "The composition is distinctive, but it emphasizes a visual identity the author has not established over the writing itself.",
+      "kept": "Use fewer, larger elements and let empty space do structural work.",
+      "risk": "It can make the portfolio feel like a graphic-design showcase.",
+      "comp": ".impeccable/mocks/decision/geometric-portrait.webp",
+      "hero": "https://impeccable.style/worlds/cards/tanaka-plane-portrait-hero.webp"
+    }
+  ],
+  "reroll": {
+    "registers": ["safer", "bolder"]
+  },
+  "buildPath": {
+    "value": "code",
+    "toggle": true
+  },
+  "canon": true,
+  "canonCard": {
+    "label": "The familiar technical blog",
+    "thesis": "A dark monospace introduction followed by a conventional chronological post list.",
+    "palette": ["#0a090c", "#f0edee", "#38a3a5"],
+    "materials": ["flat dark canvas", "monospace text", "thin dividers"],
+    "viewport": "A compact greeting sits above the latest posts in the arrangement visitors already expect.",
+    "risk": "It remains close to the original reference and gives visitors little to remember.",
+    "wireframe": {
+      "cols": 12,
+      "rows": 10,
+      "regions": [
+        {"label": "navigation", "x": 0, "y": 0, "w": 12, "h": 1},
+        {"label": "greeting", "x": 2, "y": 2, "w": 8, "h": 3},
+        {"label": "post list", "x": 2, "y": 5, "w": 8, "h": 5}
+      ]
+    },
+    "comp": ".impeccable/mocks/decision/canon.webp"
+  },
+  "steer": true
+}

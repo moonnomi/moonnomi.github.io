@@ -1,24 +1,39 @@
 import type { Metadata } from "next";
-import { notes } from "./content";
+import "@fontsource-variable/archivo";
+import "@fontsource-variable/public-sans";
+import { notes, siteContent } from "./content";
 import "./globals.css";
 import { SiteFrame } from "./site-frame";
 
-const description = "Notes about reverse engineering, malware analysis, and related tools.";
+const description = siteContent.introduction;
+
+const designContract = `<!--
+THESIS: A beginner's growing body of work appears as one quiet reading-room catalogue, refusing the familiar terminal-blog stack.
+OWN-WORLD: An onyx room holds platinum reading sheets with teal edges; a hand-redrawn teal vortex identifies nomi, Archivo leads, Public Sans reads, and mono is reserved for dates and code.
+STORY: Visitors meet an honest learner, open the newest write-up, then scan the dated archive and read further.
+FIRST VIEWPORT: A restrained header opens to a two-column room: identity and purpose on the left, one light featured reading sheet on the right; catalogue rows begin at the fold and pull forward on focus or hover.
+FORM: Night Reading Room, grounded direction 4, seed 7fdc7752.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->`;
 
 export const metadata: Metadata = {
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    shortcut: "/favicon.svg",
+  },
   title: {
-    default: "[name] // Reverse Engineering",
-    template: "%s // [name]",
+    default: `${siteContent.name} | Learning notes`,
+    template: `%s | ${siteContent.name}`,
   },
   description,
   openGraph: {
     type: "website",
-    title: "[name] // Reverse Engineering",
+    title: `${siteContent.name} | Learning notes`,
     description,
   },
   twitter: {
     card: "summary",
-    title: "[name] // Reverse Engineering",
+    title: `${siteContent.name} | Learning notes`,
     description,
   },
 };
@@ -34,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <template aria-hidden="true" dangerouslySetInnerHTML={{ __html: designContract }} />
         <SiteFrame searchItems={searchItems}>{children}</SiteFrame>
       </body>
     </html>

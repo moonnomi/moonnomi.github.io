@@ -30,6 +30,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local authoring sessions and automatic content backups
+/.nomi-studio/
 
 # vercel
 .vercel
@@ -38,3 +42,6 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+
+# local screenshots and design references
+/artifacts/

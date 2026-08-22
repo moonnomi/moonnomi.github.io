@@ -3,17 +3,22 @@
 import { useState } from "react";
 
 export function CopyCode({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<"idle" | "copied" | "error">("idle");
 
   const copy = async () => {
-    await navigator.clipboard.writeText(value);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1400);
+    try {
+      if (!navigator.clipboard) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(value);
+      setStatus("copied");
+      window.setTimeout(() => setStatus("idle"), 1400);
+    } catch {
+      setStatus("error");
+    }
   };
 
   return (
-    <button className="copy-code" type="button" onClick={copy}>
-      {copied ? "copied" : "copy"}
+    <button className="copy-code" type="button" data-state={status} aria-live="polite" onClick={copy}>
+      {status === "copied" ? "Copied" : status === "error" ? "Copy failed, try again" : "Copy"}
     </button>
   );
 }
