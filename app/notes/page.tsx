@@ -3,46 +3,31 @@ import Link from "next/link";
 import { notes } from "../content";
 
 export const metadata: Metadata = {
-  title: "Field Notes",
-  description: "Reverse engineering, malware analysis, and detection engineering case notes.",
+  title: "Posts",
+  description: "Posts about reverse engineering and malware analysis.",
 };
 
 export default function NotesPage() {
-  const tags = [...new Set(notes.flatMap((note) => note.tags))].sort();
-
   return (
-    <>
-      <header className="page-hero">
-        <div className="shell page-hero-grid">
-          <div>
-            <p className="eyebrow"><span>INDEX</span> evidence archive</p>
-            <h1>Field notes</h1>
-          </div>
-          <p>Process-heavy writeups covering disassembly, deobfuscation, configuration recovery, and detection logic.</p>
-        </div>
+    <div className="content-shell listing-page">
+      <header className="simple-page-header">
+        <h1>Posts</h1>
+        <p>Reverse engineering, malware analysis, and related tools.</p>
       </header>
 
-      <div className="shell archive-layout">
-        <aside className="archive-aside">
-          <p className="aside-label">FILTER VOCABULARY</p>
-          <div className="tag-index">{tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
-          <p className="aside-note">Use <kbd>/</kbd> anywhere to search the archive.</p>
-        </aside>
-        <section className="archive-list" aria-label="All field notes">
-          {notes.map((note, index) => (
-            <article className="archive-entry" key={note.slug}>
-              <span className="archive-number">{String(index + 1).padStart(2, "0")}</span>
-              <div>
-                <div className="note-meta"><span>{note.caseId}</span><time>{note.date}</time><span>{note.classification}</span></div>
-                <h2><Link href={`/notes/${note.slug}`}>{note.title}</Link></h2>
-                <p>{note.summary}</p>
-                <ul>{note.tags.map((tag) => <li key={tag}>#{tag}</li>)}</ul>
-              </div>
-              <Link className="archive-open" href={`/notes/${note.slug}`}>open ↗</Link>
-            </article>
-          ))}
-        </section>
+      <div className="post-list">
+        {notes.map((note) => (
+          <article className="post-row" key={note.slug}>
+            <div className="post-meta">
+              <time>{note.date}</time>
+              <span>{note.readingTime}</span>
+            </div>
+            <h2><Link href={`/notes/${note.slug}`}>{note.title}</Link></h2>
+            <p>{note.summary}</p>
+            <ul>{note.tags.map((tag) => <li key={tag}>#{tag}</li>)}</ul>
+          </article>
+        ))}
       </div>
-    </>
+    </div>
   );
 }

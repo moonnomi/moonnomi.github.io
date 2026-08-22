@@ -13,27 +13,23 @@ export type NoteSection = {
 
 export type LabNote = {
   slug: string;
-  caseId: string;
   title: string;
   summary: string;
   date: string;
   readingTime: string;
   tags: string[];
-  classification: string;
   sections: NoteSection[];
 };
 
 export const notes: LabNote[] = [
   {
     slug: "staged-loader-static-triage",
-    caseId: "CASE-001",
     title: "Unpacking a staged loader without executing it",
     summary:
       "A static-first workflow for recovering an embedded payload, validating its boundaries, and documenting the hand-off between stages.",
     date: "2026.08.17",
     readingTime: "8 min",
     tags: ["pe", "unpacking", "static-analysis"],
-    classification: "research note",
     sections: [
       {
         id: "initial-triage",
@@ -86,14 +82,12 @@ export const notes: LabNote[] = [
   },
   {
     slug: "opaque-predicate-cfg",
-    caseId: "CASE-002",
     title: "Tracing an opaque predicate through a flattened CFG",
     summary:
       "How I reduced a noisy dispatcher loop into a small set of meaningful state transitions and rebuilt the function's control flow.",
     date: "2026.08.04",
     readingTime: "11 min",
     tags: ["deobfuscation", "cfg", "x64"],
-    classification: "reverse engineering",
     sections: [
       {
         id: "symptom",
@@ -139,14 +133,12 @@ export const notes: LabNote[] = [
   },
   {
     slug: "yara-config-infostealer",
-    caseId: "CASE-003",
     title: "Designing a resilient YARA rule around a config decoder",
     summary:
       "A detection note focused on stable implementation details instead of family names, packed-byte signatures, or disposable infrastructure.",
     date: "2026.07.22",
     readingTime: "7 min",
     tags: ["yara", "detection", "configuration"],
-    classification: "detection engineering",
     sections: [
       {
         id: "goal",
@@ -187,38 +179,4 @@ export const notes: LabNote[] = [
       },
     ],
   },
-];
-
-export const projects = [
-  {
-    code: "LAB-01",
-    title: "PE triage pipeline",
-    description:
-      "A reproducible static-analysis workflow for metadata, imports, entropy, strings, and suspicious region extraction.",
-    tags: ["python", "pefile", "triage"],
-    status: "documented",
-  },
-  {
-    code: "LAB-02",
-    title: "String deobfuscation harness",
-    description:
-      "Small emulation adapters for lifting common stack-string and rolling-XOR routines out of noisy binaries.",
-    tags: ["emulation", "deobfuscation", "x64"],
-    status: "research",
-  },
-  {
-    code: "LAB-03",
-    title: "Memory artifact notebook",
-    description:
-      "A case-oriented collection of Volatility queries, process-tree pivots, and evidence-preserving export steps.",
-    tags: ["memory", "dfir", "windows"],
-    status: "in progress",
-  },
-];
-
-export const capabilities = [
-  ["static analysis", "PE structure, imports, strings, resources, packer clues"],
-  ["dynamic analysis", "isolated execution, API traces, behavioral timelines"],
-  ["deobfuscation", "control-flow recovery, string decoders, config extraction"],
-  ["detection", "YARA design, IOC context, repeatable validation"],
 ];

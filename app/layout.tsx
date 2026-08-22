@@ -1,41 +1,31 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { notes } from "./content";
 import "./globals.css";
 import { SiteFrame } from "./site-frame";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000";
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
-  const origin = `${protocol}://${host}`;
-  const description = "A reverse engineering and malware analysis portfolio presented as a dark evidence notebook.";
+const description = "Notes about reverse engineering, malware analysis, and related tools.";
 
-  return {
-    title: {
-      default: "[ IDENTITY ] // Reverse Engineering Lab",
-      template: "%s // Analysis Lab",
-    },
+export const metadata: Metadata = {
+  title: {
+    default: "[name] // Reverse Engineering",
+    template: "%s // [name]",
+  },
+  description,
+  openGraph: {
+    type: "website",
+    title: "[name] // Reverse Engineering",
     description,
-    openGraph: {
-      type: "website",
-      title: "[ IDENTITY ] // Reverse Engineering Lab",
-      description,
-      images: [{ url: `${origin}/og.png`, width: 1734, height: 910, alt: "Dark reverse engineering analysis lab cover" }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: "[ IDENTITY ] // Reverse Engineering Lab",
-      description,
-      images: [`${origin}/og.png`],
-    },
-  };
-}
+  },
+  twitter: {
+    card: "summary",
+    title: "[name] // Reverse Engineering",
+    description,
+  },
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const searchItems = notes.map(({ slug, caseId, title, summary, tags }) => ({
+  const searchItems = notes.map(({ slug, title, summary, tags }) => ({
     slug,
-    caseId,
     title,
     summary,
     tags,
