@@ -9,6 +9,12 @@
   --featured-surface-hover: #18282b;
   --featured-ink: #edf3f1;
   --featured-muted: #aabbb8;
+  --article-surface: #142124;
+  --article-surface-raised: #1b2d30;
+  --article-ink: #edf3f1;
+  --article-copy: #bdcbc8;
+  --article-muted: #aabbb8;
+  --article-line: #2b3d40;
   --ink: #171419;
   --ink-muted: #625b61;
   --text: #f0edee;
@@ -695,24 +701,24 @@ input {
 .article-paper {
   overflow: hidden;
   border-radius: 14px;
-  background: var(--paper);
-  box-shadow: 0 24px 66px rgba(0, 0, 0, 0.34);
-  color: var(--ink);
+  background: var(--article-surface);
+  box-shadow: 0 24px 66px rgba(0, 0, 0, 0.24);
+  color: var(--article-ink);
 }
 
 .article-header {
   padding: clamp(42px, 7vw, 82px) clamp(32px, 8vw, 100px) clamp(42px, 6vw, 70px);
-  border-bottom: 1px solid var(--paper-line);
+  border-bottom: 1px solid var(--article-line);
 }
 
 .back-link {
-  color: #256f71;
+  color: var(--teal);
   font-size: 13px;
   font-weight: 650;
 }
 
 .back-link:hover {
-  color: #1f6668;
+  color: var(--emerald);
 }
 
 .article-header h1 {
@@ -725,7 +731,7 @@ input {
 .article-summary {
   max-width: 65ch;
   margin: 30px 0 0;
-  color: var(--ink-muted);
+  color: var(--article-muted);
   font-size: 18px;
 }
 
@@ -734,20 +740,20 @@ input {
   flex-wrap: wrap;
   gap: 8px 24px;
   margin-top: 38px;
-  color: var(--ink-muted);
+  color: var(--article-muted);
   font-size: 10px;
 }
 
 .article-meta span + span::before,
 .article-meta time + span::before {
   margin-right: 24px;
-  color: var(--paper-line);
+  color: var(--article-line);
   content: "/";
 }
 
 .article-tags {
   margin-top: 12px;
-  color: #256f71;
+  color: var(--teal);
 }
 
 .article-layout {
@@ -783,7 +789,7 @@ input {
 .article-section p,
 .article-list {
   max-width: 70ch;
-  color: #3f393e;
+  color: var(--article-copy);
   font-size: 17px;
   line-height: 1.82;
 }
@@ -809,7 +815,7 @@ input {
   margin: 34px 0 0;
   overflow: hidden;
   border-radius: 12px;
-  background: #dce9e6;
+  background: var(--article-surface-raised);
 }
 
 .evidence-list > div {
@@ -817,7 +823,7 @@ input {
   grid-template-columns: minmax(120px, 0.45fr) minmax(0, 1fr);
   gap: 24px;
   padding: 15px 20px;
-  border-bottom: 1px solid rgba(23, 20, 25, 0.14);
+  border-bottom: 1px solid rgba(237, 243, 241, 0.1);
 }
 
 .evidence-list > div:last-child {
@@ -825,14 +831,14 @@ input {
 }
 
 .evidence-list dt {
-  color: #3e6f68;
+  color: var(--teal);
   font-family: var(--body);
   font-size: 10px;
 }
 
 .evidence-list dd {
   margin: 0;
-  color: var(--ink);
+  color: var(--article-ink);
   font-size: 14px;
 }
 
@@ -892,7 +898,7 @@ input {
   top: calc(var(--header-height) + 32px);
   align-self: start;
   padding-left: 24px;
-  border-left: 1px solid var(--paper-line);
+  border-left: 1px solid var(--article-line);
 }
 
 .article-toc strong {
@@ -905,14 +911,14 @@ input {
 .article-toc a {
   display: block;
   padding: 7px 0;
-  color: var(--ink-muted);
+  color: var(--article-muted);
   font-size: 12px;
   line-height: 1.45;
   text-decoration: none;
 }
 
 .article-toc a:hover {
-  color: #256f71;
+  color: var(--teal);
 }
 
 .mobile-toc {
@@ -925,11 +931,11 @@ input {
   gap: 32px;
   margin-top: 86px;
   padding-top: 28px;
-  border-top: 1px solid var(--paper-line);
+  border-top: 1px solid var(--article-line);
 }
 
 .post-navigation a {
-  color: var(--ink);
+  color: var(--article-ink);
   text-decoration: none;
 }
 
@@ -940,7 +946,7 @@ input {
 .post-navigation small {
   display: block;
   margin-bottom: 6px;
-  color: #256f71;
+  color: var(--teal);
   font-family: var(--body);
   font-size: 10px;
 }
@@ -1336,12 +1342,12 @@ input {
     display: block;
     margin: 32px 24px 0;
     padding: 16px 0;
-    border-top: 1px solid var(--paper-line);
-    border-bottom: 1px solid var(--paper-line);
+    border-top: 1px solid var(--article-line);
+    border-bottom: 1px solid var(--article-line);
   }
 
   .mobile-toc summary {
-    color: var(--ink);
+    color: var(--article-ink);
     cursor: pointer;
     font-family: var(--display);
     font-weight: 650;
@@ -1350,7 +1356,7 @@ input {
   .mobile-toc a {
     display: block;
     padding: 8px 0 0;
-    color: var(--ink-muted);
+    color: var(--article-muted);
     font-size: 13px;
   }
 
@@ -1531,5 +1537,28 @@ input {
 
   .article-paper {
     width: 100%;
+  }
+
+  .article-summary,
+  .article-meta,
+  .article-section p,
+  .article-list,
+  .evidence-list dd {
+    color: #3f393e;
+  }
+
+  .back-link,
+  .article-tags,
+  .evidence-list dt {
+    color: #256f71;
+  }
+
+  .article-header,
+  .evidence-list > div {
+    border-color: #c9c2c6;
+  }
+
+  .evidence-list {
+    background: #dce9e6;
   }
 }

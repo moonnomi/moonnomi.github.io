@@ -5,6 +5,12 @@ colors:
   room: "#0a090c"
   room-raised: "#131116"
   paper: "#f0edee"
+  article-surface: "#142124"
+  article-surface-raised: "#1b2d30"
+  article-ink: "#edf3f1"
+  article-copy: "#bdcbc8"
+  article-muted: "#aabbb8"
+  article-line: "#2b3d40"
   ink: "#171419"
   ink-muted: "#625b61"
   text: "#f0edee"
@@ -20,7 +26,6 @@ colors:
   mint-paper: "#d9ebe7"
   evidence-mint: "#dce9e6"
   mint-ink: "#3e6f68"
-  article-ink: "#3f393e"
   placeholder-ink: "#817b80"
 typography:
   display:
@@ -182,8 +187,8 @@ components:
     padding: "15px 20px"
     width: "100%"
   article-reading-sheet:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.ink}"
+    backgroundColor: "{colors.article-surface}"
+    textColor: "{colors.article-ink}"
     typography: "{typography.reading}"
     rounded: "{rounded.sheet}"
     width: "100%"
@@ -195,7 +200,7 @@ components:
 
 **Creative North Star: "Night Reading Room"**
 
-Night Reading Room treats the portfolio as a compact onyx interior where platinum paper holds the work worth reading. The voice is quiet, honest, editorial, and beginner-but-promising: credibility comes from clear explanation, visible progress, and care rather than from claims of mastery.
+Night Reading Room treats the portfolio as a compact onyx interior where low-glare charcoal-teal sheets hold long-form work and platinum is reserved for occasional inserts. The voice is quiet, honest, editorial, and beginner-but-promising: credibility comes from clear explanation, visible progress, and care rather than from claims of mastery.
 
 The interface keeps room surfaces dark and nearly flat, then introduces physical contrast only where a reading sheet should feel tangible. A hand-drawn teal vortex identifies nomi: it redraws through closely related imperfect paths on the homepage and holds on one static frame elsewhere. Archivo supplies concise editorial authority, Public Sans keeps explanation direct, and Cascadia Code appears only where technical notation benefits. Teal guides the eye, emerald marks constructive emphasis, and orange remains an accessibility and error signal.
 
@@ -233,7 +238,13 @@ The palette moves between near-black room tones and warm platinum paper, with te
 
 - **Room Onyx** (`room`, #0a090c): The continuous site background and dark chrome.
 - **Raised Room** (`room-raised`, #131116): The shallow tonal layer for selected rows, code blocks, and the search sheet.
-- **Platinum Paper** (`paper`, #f0edee): The featured reading sheet, article paper, and selected search result.
+- **Platinum Paper** (`paper`, #f0edee): The about-page reading sheet and selected search result.
+- **Article Surface** (`article-surface`, #142124): The low-glare charcoal-teal field for long-form write-ups.
+- **Raised Article Surface** (`article-surface-raised`, #1b2d30): Evidence lists and contained facts inside article pages.
+- **Article Ink** (`article-ink`, #edf3f1): Headlines and primary labels on the dark article surface.
+- **Article Copy** (`article-copy`, #bdcbc8): Long-form prose tuned for sustained reading on the dark article surface.
+- **Article Muted** (`article-muted`, #aabbb8): Summaries, metadata, and contents links in articles.
+- **Article Line** (`article-line`, #2b3d40): Dividers and table-of-contents rails on article pages.
 - **Reading Ink** (`ink`, #171419): Primary text on platinum and mint paper.
 - **Muted Reading Ink** (`ink-muted`, #625b61): Summaries, metadata, and supporting prose on paper.
 - **Platinum Text** (`text`, #f0edee): Primary text in the dark room.
@@ -244,14 +255,13 @@ The palette moves between near-black room tones and warm platinum paper, with te
 - **Mint Paper** (`mint-paper`, #d9ebe7): The about-page detail insert.
 - **Evidence Mint** (`evidence-mint`, #dce9e6): Evidence lists inside article paper.
 - **Mint Ink** (`mint-ink`, #3e6f68): Small labels on mint inserts.
-- **Article Ink** (`article-ink`, #3f393e): Long-form paragraph and list text, softened from primary ink.
 - **Placeholder Ink** (`placeholder-ink`, #817b80): Search placeholder copy in the raised room.
 
 ### Named Rules
 
 **The Mineral Accent Rule.** Teal guides, emerald confirms, and orange focuses or warns; never distribute all three as interchangeable decoration.
 
-**The Paper Contrast Rule.** Light neutrals belong to reading sheets and information inserts; the surrounding site chrome stays in room tones.
+**The Low-Glare Reading Rule.** Long-form write-ups stay on a charcoal-teal surface close to the room, while light neutrals are reserved for shorter information inserts.
 
 ## Typography
 
@@ -327,7 +337,8 @@ Components are refined and restrained: state changes are precise, readable, and 
 
 - **Featured reading sheet:** Platinum Paper with Reading Ink, gently curved 14px corners, fluid 34–58px padding, a one-pixel teal edge, and a 6px lift on hover or focus.
 - **Catalogue entry:** A full-width ruled row with a three-column desktop grid, 30px 20px 32px padding, and no radius or rest shadow. Hover or focus shifts it 10px into Raised Room and reveals a vertical teal rule; narrow screens reduce the shift to 4px.
-- **Article and about sheets:** Platinum Paper with 14px corners on larger screens. Article paper becomes edge-to-edge, square, and shadowless below 720px.
+- **Article sheet:** Low-glare Article Surface with 14px corners on larger screens; it becomes edge-to-edge, square, and shadowless below 720px.
+- **About sheet:** Platinum Paper with 14px corners on larger screens.
 - **Technical inserts:** Evidence and code containers use 12px corners; evidence is mint paper, while code returns to Raised Room.
 
 ### Inputs / Fields
@@ -351,7 +362,7 @@ The homepage uses a 116px teal SVG mark whose seven closely related hand-drawn p
 
 ### Article Reading Sheet
 
-The article sheet combines a large editorial header, generous 17px/1.82 reading copy, mint evidence lists, dark code blocks, a sticky desktop contents rail, a native mobile disclosure, and simple ruled adjacent-post navigation.
+The article sheet combines a large editorial header, generous 17px/1.82 low-glare reading copy, raised charcoal-teal evidence lists, dark code blocks, a sticky desktop contents rail, a native mobile disclosure, and simple ruled adjacent-post navigation.
 
 ### Named Rules
 
@@ -362,7 +373,7 @@ The article sheet combines a large editorial header, generous 17px/1.82 reading 
 ### Do:
 
 - **Do** keep dark room chrome flat and separate regions with one-pixel Room Line rules.
-- **Do** use Platinum Paper for primary reading surfaces and 14px corners only while those surfaces remain inset.
+- **Do** keep long-form reading surfaces charcoal-teal and use Platinum Paper only for shorter inserts; retain 14px corners only while those surfaces remain inset.
 - **Do** reserve the 2px Orange Focus outline with a 4px offset for visible keyboard focus.
 - **Do** hold long-form article copy to 17px, 1.82 line-height, and a 70ch maximum.
 - **Do** preserve the 900px, 720px, and 520px responsive transformations when extending the surface.
