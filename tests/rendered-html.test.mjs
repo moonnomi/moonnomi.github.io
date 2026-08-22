@@ -32,7 +32,7 @@ test("server-renders the Night Reading Room homepage", async () => {
 
   const html = await response.text();
   assert.doesNotMatch(html, developmentPreviewMeta);
-  assert.match(html, /<title>nomi \| Learning notes<\/title>/i);
+  assert.match(html, /<title>nomi<\/title>/i);
   assert.match(html, /Night Reading Room/);
   assert.match(html, /seed 7fdc7752/);
   assert.match(html, /I am a beginner documenting what I learn/);

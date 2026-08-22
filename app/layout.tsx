@@ -22,18 +22,18 @@ export const metadata: Metadata = {
     shortcut: "/favicon.svg",
   },
   title: {
-    default: `${siteContent.name} | Learning notes`,
+    default: siteContent.name,
     template: `%s | ${siteContent.name}`,
   },
   description,
   openGraph: {
     type: "website",
-    title: `${siteContent.name} | Learning notes`,
+    title: siteContent.name,
     description,
   },
   twitter: {
     card: "summary",
-    title: `${siteContent.name} | Learning notes`,
+    title: siteContent.name,
     description,
   },
 };
