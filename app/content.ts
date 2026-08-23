@@ -44,7 +44,6 @@ export type SiteContent = {
   role: string;
   introduction: string;
   footerTagline: string;
-  writingIntroduction: string;
   aboutLead: string;
   aboutParagraphs: string[];
   learningTopics: string[];

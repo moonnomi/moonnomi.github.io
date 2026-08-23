@@ -11,6 +11,7 @@ colors:
   article-copy: "#bdcbc8"
   article-muted: "#aabbb8"
   article-line: "#2b3d40"
+  featured-surface-hover: "#18282b"
   ink: "#171419"
   ink-muted: "#625b61"
   text: "#f0edee"
@@ -23,9 +24,7 @@ colors:
   orange: "#ff6b35"
   reading-teal: "#256f71"
   reading-teal-hover: "#1f6668"
-  mint-paper: "#d9ebe7"
   evidence-mint: "#dce9e6"
-  mint-ink: "#3e6f68"
   placeholder-ink: "#817b80"
 typography:
   display:
@@ -102,22 +101,22 @@ components:
     backgroundColor: "transparent"
     textColor: "{colors.teal}"
     rounded: "{rounded.square}"
-    size: "24px"
+    size: "28px"
   vortex-mark-arrival:
     backgroundColor: "transparent"
     textColor: "{colors.teal}"
     rounded: "{rounded.square}"
     size: "116px"
   featured-reading-sheet:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.ink}"
+    backgroundColor: "{colors.article-surface}"
+    textColor: "{colors.article-ink}"
     typography: "{typography.body}"
     rounded: "{rounded.sheet}"
     padding: "clamp(34px, 5vw, 58px)"
     width: "100%"
   featured-reading-sheet-hover:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.ink}"
+    backgroundColor: "{colors.featured-surface-hover}"
+    textColor: "{colors.article-ink}"
     typography: "{typography.body}"
     rounded: "{rounded.sheet}"
     padding: "clamp(34px, 5vw, 58px)"
@@ -208,7 +207,7 @@ Density is generous without becoming ceremonial. Fine rules, short labels, restr
 
 **Key Characteristics:**
 
-- Onyx room framing platinum reading paper
+- Onyx room framing low-glare charcoal-teal reading sheets
 - Hand-drawn teal vortex with one bounded arrival animation
 - Wide editorial headings paired with plain, readable prose
 - Flat tonal hierarchy with selective physical paper lift
@@ -218,7 +217,7 @@ Density is generous without becoming ceremonial. Fine rules, short labels, restr
 
 ## Colors
 
-The palette moves between near-black room tones and warm platinum paper, with teal, emerald, and orange used as sparse mineral signals.
+The palette moves between near-black room tones and low-glare charcoal-teal reading surfaces, with teal, emerald, and orange used as sparse mineral signals.
 
 ### Primary
 
@@ -238,13 +237,14 @@ The palette moves between near-black room tones and warm platinum paper, with te
 
 - **Room Onyx** (`room`, #0a090c): The continuous site background and dark chrome.
 - **Raised Room** (`room-raised`, #131116): The shallow tonal layer for selected rows, code blocks, and the search sheet.
-- **Platinum Paper** (`paper`, #f0edee): The about-page reading sheet and selected search result.
+- **Platinum Paper** (`paper`, #f0edee): The selected search result and print fallback.
 - **Article Surface** (`article-surface`, #142124): The low-glare charcoal-teal field for long-form write-ups.
 - **Raised Article Surface** (`article-surface-raised`, #1b2d30): Evidence lists and contained facts inside article pages.
 - **Article Ink** (`article-ink`, #edf3f1): Headlines and primary labels on the dark article surface.
 - **Article Copy** (`article-copy`, #bdcbc8): Long-form prose tuned for sustained reading on the dark article surface.
 - **Article Muted** (`article-muted`, #aabbb8): Summaries, metadata, and contents links in articles.
 - **Article Line** (`article-line`, #2b3d40): Dividers and table-of-contents rails on article pages.
+- **Featured Surface Hover** (`featured-surface-hover`, #18282b): The restrained lift state for the homepage feature.
 - **Reading Ink** (`ink`, #171419): Primary text on platinum and mint paper.
 - **Muted Reading Ink** (`ink-muted`, #625b61): Summaries, metadata, and supporting prose on paper.
 - **Platinum Text** (`text`, #f0edee): Primary text in the dark room.
@@ -252,9 +252,7 @@ The palette moves between near-black room tones and warm platinum paper, with te
 - **Faint Room Text** (`faint`, #807a7f): Placeholder identity, tertiary metadata, and low-priority notes.
 - **Room Line** (`line`, #302d31): One-pixel separators on dark surfaces.
 - **Paper Line** (`paper-line`, #c9c2c6): One-pixel separators and table-of-contents rails on paper.
-- **Mint Paper** (`mint-paper`, #d9ebe7): The about-page detail insert.
-- **Evidence Mint** (`evidence-mint`, #dce9e6): Evidence lists inside article paper.
-- **Mint Ink** (`mint-ink`, #3e6f68): Small labels on mint inserts.
+- **Evidence Mint** (`evidence-mint`, #dce9e6): The print fallback for article evidence lists.
 - **Placeholder Ink** (`placeholder-ink`, #817b80): Search placeholder copy in the raised room.
 
 ### Named Rules
@@ -289,7 +287,7 @@ The palette moves between near-black room tones and warm platinum paper, with te
 
 The primary shell is capped at 1120px with 24px desktop side insets, tightening to 16px at 720px and 14px at 520px. A sticky 72px header frames the room and becomes 64px on compact screens. Major sections use 76-140px vertical breathing room, while component spacing follows a compact 4, 8, 12, 16, 24, 32, 48, and 72px rhythm.
 
-The homepage opens as a 0.8/1.2 two-column room with a 440px minimum reading-sheet column and a fluid 48–96px gap. The archive uses the same asymmetry for its header before returning to full-width catalogue rows. Article interiors center a 720px reading column beside a 200px contents rail with a 52–88px gap.
+The homepage opens as a 0.8/1.2 two-column room with a 440px minimum reading-sheet column and a fluid 48–96px gap. A small centered chevron cues the Latest posts section at the fold. The posts archive uses one unaccompanied title before returning to full-width catalogue rows. Article interiors center a 720px reading column beside a 200px contents rail with a 52–88px gap.
 
 At 900px, catalogue metadata and tags reflow and the article rail narrows. At 720px, primary grids collapse, navigation becomes a stacked menu, the table of contents becomes a native disclosure, and article paper runs edge to edge without radius or shadow. At 520px, catalogue rows and adjacent-post links become single-column and major padding contracts without reducing reading type.
 
@@ -297,14 +295,13 @@ At 900px, catalogue metadata and tags reflow and the article rail narrows. At 72
 
 ## Elevation & Depth
 
-The system is flat and tonal by default. One-pixel dividers and shifts between Room Onyx and Raised Room establish most hierarchy; shadow is reserved for physical paper and the temporary search layer. Featured and about sheets use a 0 22px 58px paper shadow, the article uses 0 24px 66px, and the search sheet uses 0 24px 64px. The featured sheet alone deepens to 0 30px 72px as it lifts 6px on hover or keyboard focus.
+The system is flat and tonal by default. One-pixel dividers and shifts between Room Onyx and Raised Room establish most hierarchy; shadow is reserved for reading sheets and the temporary search layer. Featured and about sheets use a restrained 0 22px 58px shadow, the article uses 0 24px 66px, and the search sheet uses 0 24px 64px. The featured sheet alone deepens slightly as it lifts 3px on hover or keyboard focus.
 
 ### Shadow Vocabulary
 
-- **Paper Rest** (`0 22px 58px rgba(0, 0, 0, 0.32)`): Default featured reading sheet.
-- **Paper Lift** (`0 30px 72px rgba(0, 0, 0, 0.4)`): Featured sheet hover and focus response.
-- **About Paper** (`0 22px 58px rgba(0, 0, 0, 0.3)`): Split about sheet.
-- **Article Paper** (`0 24px 66px rgba(0, 0, 0, 0.34)`): Long-form article container.
+- **Sheet Rest** (`0 22px 58px rgba(0, 0, 0, 0.24)`): Default featured and about reading sheets.
+- **Sheet Lift** (`0 28px 64px rgba(0, 0, 0, 0.32)`): Featured sheet hover and focus response.
+- **Article Sheet** (`0 24px 66px rgba(0, 0, 0, 0.24)`): Long-form article container.
 - **Search Layer** (`0 24px 64px rgba(0, 0, 0, 0.42)`): Modal search sheet above its onyx scrim.
 
 ### Named Rules
@@ -331,15 +328,15 @@ Components are refined and restrained: state changes are precise, readable, and 
 ### Chips
 
 - **Style:** Tags are unboxed, hash-prefixed text with 10–11px label sizing and no fill or radius.
-- **Context:** Use Faint Room Text in catalogue rows, Muted Reading Ink in the featured sheet, and Reading Teal in articles.
+- **Context:** Use Faint Room Text in catalogue rows, Article Muted in the featured sheet, and Edge Teal in articles.
 
 ### Cards / Containers
 
-- **Featured reading sheet:** Platinum Paper with Reading Ink, gently curved 14px corners, fluid 34–58px padding, a one-pixel teal edge, and a 6px lift on hover or focus.
+- **Featured reading sheet:** Low-glare Article Surface with Article Ink, gently curved 14px corners, fluid 34–58px padding, a one-pixel teal edge, and a 3px lift on hover or focus. The entire sheet is the link, so it carries no redundant action label.
 - **Catalogue entry:** A full-width ruled row with a three-column desktop grid, 30px 20px 32px padding, and no radius or rest shadow. Hover or focus shifts it 10px into Raised Room and reveals a vertical teal rule; narrow screens reduce the shift to 4px.
 - **Article sheet:** Low-glare Article Surface with 14px corners on larger screens; it becomes edge-to-edge, square, and shadowless below 720px.
-- **About sheet:** Platinum Paper with 14px corners on larger screens.
-- **Technical inserts:** Evidence and code containers use 12px corners; evidence is mint paper, while code returns to Raised Room.
+- **About sheet:** Low-glare Article Surface with a Raised Article Surface contact insert and 14px corners on larger screens.
+- **Technical inserts:** Evidence and code containers use 12px corners; evidence uses Raised Article Surface on screen and a mint print fallback, while code returns to Raised Room.
 
 ### Inputs / Fields
 
@@ -350,7 +347,8 @@ Components are refined and restrained: state changes are precise, readable, and 
 ### Navigation
 
 - **Desktop:** A sticky onyx header uses 13px Public Sans links, 28px gaps, muted default text, Platinum Text on hover, and an Emerald Marker search action.
-- **Brand:** A compact Archivo wordmark is paired with a static 24px teal vortex drawn from the same path family as the homepage mark.
+- **Brand:** The home link is a static 28px teal vortex with an accessible name and no repeated wordmark.
+- **Continuation cue:** A small CSS-drawn chevron briefly nudges downward toward Latest posts, remains a 44px link target, and becomes still when reduced motion is requested.
 - **Mobile:** Below 720px, links stack beneath the 64px header with 12px vertical hit areas and a one-pixel bottom boundary.
 - **Search:** A full-width Raised Room sheet descends beneath the header over a translucent onyx dismissal layer. Results become Platinum Paper with Reading Ink when keyboard-selected or hovered.
 

@@ -345,7 +345,6 @@ function normalizeSite(value) {
     role: requireString(value.role, "Role", 140),
     introduction: requireString(value.introduction, "Introduction", 600),
     footerTagline: requireString(value.footerTagline, "Footer tagline", 180),
-    writingIntroduction: requireString(value.writingIntroduction, "Writing introduction", 420),
     aboutLead: requireString(value.aboutLead, "About lead", 700),
     aboutParagraphs,
     learningTopics,

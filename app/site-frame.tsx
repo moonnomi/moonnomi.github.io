@@ -96,9 +96,8 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
 
       <header className="site-header">
         <div className="shell header-inner">
-          <Link className="brand" href="/">
+          <Link className="brand" href="/" aria-label={`${siteContent.name} home`}>
             <VortexMark className="brand-vortex" />
-            <span>{siteContent.name}</span>
           </Link>
 
           <button
@@ -112,7 +111,7 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
           </button>
 
           <nav id="primary-navigation" className={`site-nav${menuOpen ? " is-open" : ""}`} aria-label="Primary navigation">
-            <Link href="/notes" onClick={() => setMenuOpen(false)}>Writing</Link>
+            <Link href="/notes" onClick={() => setMenuOpen(false)}>Posts</Link>
             <Link href="/about" onClick={() => setMenuOpen(false)}>About</Link>
             <button
               ref={searchButtonRef}
@@ -161,7 +160,7 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
           >
             <div className="shell search-sheet-inner">
               <div className="search-heading">
-                <h2 id="search-title">Search writing</h2>
+                <h2 id="search-title">Search posts</h2>
                 <button type="button" onClick={() => closeSearch()}>Close</button>
               </div>
 
@@ -205,7 +204,7 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
                     <strong>{item.title}</strong>
                     <span>{item.summary}</span>
                   </Link>
-                )) : <p>No matching write-ups. Try a broader topic.</p>}
+                )) : <p>No matching posts. Try a broader topic.</p>}
               </div>
             </div>
           </dialog>

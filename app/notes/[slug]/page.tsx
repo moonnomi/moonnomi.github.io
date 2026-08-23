@@ -62,7 +62,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
     <article className="reading-room-article">
       <div className="shell article-paper">
         <header className="article-header">
-          <Link className="back-link" href="/notes">Back to writing</Link>
+          <Link className="back-link" href="/notes">Back to posts</Link>
           <h1>{note.title}</h1>
           <p className="article-summary">{note.summary}</p>
           <div className="article-meta">

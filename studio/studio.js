@@ -260,7 +260,6 @@ function fillSiteForm() {
   byId("site-role").value = site.role;
   byId("site-introduction").value = site.introduction;
   byId("site-footer-tagline").value = site.footerTagline;
-  byId("site-writing-introduction").value = site.writingIntroduction;
   byId("site-about-lead").value = site.aboutLead;
   byId("site-about-paragraphs").value = site.aboutParagraphs.join("\n\n");
   byId("site-learning-topics").value = site.learningTopics.join("\n");
@@ -280,7 +279,6 @@ function readSiteForm() {
     role: byId("site-role").value,
     introduction: byId("site-introduction").value,
     footerTagline: byId("site-footer-tagline").value,
-    writingIntroduction: byId("site-writing-introduction").value,
     aboutLead: byId("site-about-lead").value,
     aboutParagraphs: byId("site-about-paragraphs").value
       .split(/\n\s*\n/)

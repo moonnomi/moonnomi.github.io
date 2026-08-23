@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notes, siteContent } from "../content";
+import { notes } from "../content";
 
 export const metadata: Metadata = {
-  title: "Writing",
+  title: "Posts",
   description: "Learning notes about reverse engineering and malware analysis.",
 };
 
@@ -11,10 +11,7 @@ export default function NotesPage() {
   return (
     <div className="shell archive-page">
       <header className="archive-header">
-        <h1>Writing</h1>
-        <div>
-          <p>{siteContent.writingIntroduction}</p>
-        </div>
+        <h1>Posts</h1>
       </header>
 
       <div className="catalog-list archive-catalog">
@@ -35,7 +32,7 @@ export default function NotesPage() {
               </div>
             </Link>
           </article>
-        )) : <p className="catalog-empty">No published writing yet.</p>}
+        )) : <p className="catalog-empty">No published posts yet.</p>}
       </div>
     </div>
   );

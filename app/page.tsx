@@ -33,23 +33,26 @@ export default function Home() {
                 <div className="tag-row">
                   {featured.tags.map((tag) => <span key={tag}>#{tag}</span>)}
                 </div>
-                <span>Read write-up</span>
               </div>
             </Link>
           ) : (
             <div className="featured-sheet featured-sheet-empty">
-              <h2>No published writing yet.</h2>
-              <p>New notes will appear here after they are published.</p>
+              <h2>No published posts yet.</h2>
+              <p>New posts will appear here after they are published.</p>
             </div>
           )}
         </div>
+
+        <Link className="latest-posts-teaser" href="#latest-posts" aria-label="Jump to latest posts">
+          <span aria-hidden="true" />
+        </Link>
       </section>
 
-      <section className="writing-index">
+      <section className="writing-index" id="latest-posts">
         <div className="shell">
           <div className="section-title-row">
-            <h2>More writing</h2>
-            <Link href="/notes">View everything</Link>
+            <h2>Latest posts</h2>
+            <Link href="/notes">More posts</Link>
           </div>
 
           <div className="catalog-list">
@@ -69,7 +72,7 @@ export default function Home() {
                   </div>
                 </Link>
               </article>
-            )) : <p className="catalog-empty">More writing will appear here over time.</p>}
+            )) : <p className="catalog-empty">More posts will appear here over time.</p>}
           </div>
         </div>
       </section>

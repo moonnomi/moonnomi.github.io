@@ -41,6 +41,9 @@ test("server-renders the Night Reading Room homepage", async () => {
   assert.match(html, /class="home-name"/);
   assert.match(html, /class="home-name-stage"/);
   assert.match(html, /class="featured-sheet"/);
+  assert.match(html, /aria-label="Jump to latest posts"/);
+  assert.match(html, /<h2>Latest posts<\/h2>/);
+  assert.doesNotMatch(html, /Read write-up|View everything|More writing/);
   assert.doesNotMatch(html, /The current write-ups are sample content for the portfolio layout/);
   assert.doesNotMatch(html, /Building your site|react-loading-skeleton/);
 });
@@ -62,11 +65,12 @@ test("server-renders the writing, about, and article routes", async () => {
     articleResponse.text(),
   ]);
 
-  assert.match(writing, /<h1>Writing<\/h1>/);
+  assert.match(writing, /<h1>Posts<\/h1>/);
+  assert.doesNotMatch(writing, /Notes from learning reverse engineering/);
   assert.match(writing, />Sample</i);
   assert.match(about, /beginner currently learning reverse/);
   assert.match(about, /Writing reproducible technical notes/);
   assert.match(article, /Sample write-up/);
   assert.match(article, /class="[^"]*article-paper[^"]*"/);
-  assert.match(article, /Back to writing/);
+  assert.match(article, /Back to posts/);
 });

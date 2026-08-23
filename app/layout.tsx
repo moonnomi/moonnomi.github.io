@@ -11,7 +11,7 @@ const designContract = `<!--
 THESIS: A beginner's growing body of work appears as one quiet reading-room catalogue, refusing the familiar terminal-blog stack.
 OWN-WORLD: An onyx room holds platinum reading sheets with teal edges; a hand-redrawn teal vortex identifies nomi, Archivo leads, Public Sans reads, and mono is reserved for dates and code.
 STORY: Visitors meet an honest learner, open the newest write-up, then scan the dated archive and read further.
-FIRST VIEWPORT: A restrained header opens to a two-column room: identity and purpose on the left, one light featured reading sheet on the right; catalogue rows begin at the fold and pull forward on focus or hover.
+FIRST VIEWPORT: A restrained logo-only header opens to a two-column room: identity and purpose on the left, one low-glare featured reading sheet on the right; a small chevron points toward the latest posts at the fold.
 FORM: Night Reading Room, grounded direction 4, seed 7fdc7752.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 -->`;
