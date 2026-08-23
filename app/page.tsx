@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notes, siteContent } from "./content";
 import { ContentLinks } from "./content-links";
+import { StaticLink } from "./static-link";
 import { TypedName } from "./typed-name";
 import { VortexMark } from "./vortex-mark";
 
@@ -24,7 +24,7 @@ export default function Home() {
           </div>
 
           {featured ? (
-            <Link className="featured-sheet" href={`/notes/${featured.slug}`}>
+            <StaticLink className="featured-sheet" href={`/notes/${featured.slug}`}>
               <div className="featured-meta">
                 <time>{featured.date}</time>
                 <span>{featured.readingTime}</span>
@@ -36,7 +36,7 @@ export default function Home() {
                   {featured.tags.map((tag) => <span key={tag}>#{tag}</span>)}
                 </div>
               </div>
-            </Link>
+            </StaticLink>
           ) : (
             <div className="featured-sheet featured-sheet-empty">
               <h2>No published posts yet.</h2>
@@ -45,22 +45,22 @@ export default function Home() {
           )}
         </div>
 
-        <Link className="latest-posts-teaser" href="#latest-posts" aria-label="Jump to latest posts">
+        <StaticLink className="latest-posts-teaser" href="#latest-posts" aria-label="Jump to latest posts">
           <span aria-hidden="true" />
-        </Link>
+        </StaticLink>
       </section>
 
       <section className="writing-index" id="latest-posts">
         <div className="shell">
           <div className="section-title-row">
             <h2>Latest posts</h2>
-            <Link href="/notes">More posts</Link>
+            <StaticLink href="/notes">More posts</StaticLink>
           </div>
 
           <div className="catalog-list">
             {moreNotes.length ? moreNotes.map((note) => (
               <article className="catalog-entry" key={note.slug}>
-                <Link className="catalog-entry-link" href={`/notes/${note.slug}`}>
+                <StaticLink className="catalog-entry-link" href={`/notes/${note.slug}`}>
                   <div className="catalog-date">
                     <time>{note.date}</time>
                     <span>{note.readingTime}</span>
@@ -72,7 +72,7 @@ export default function Home() {
                   <div className="tag-row catalog-tags">
                     {note.tags.map((tag) => <span key={tag}>#{tag}</span>)}
                   </div>
-                </Link>
+                </StaticLink>
               </article>
             )) : <p className="catalog-empty">More posts will appear here over time.</p>}
           </div>

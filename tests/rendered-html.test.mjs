@@ -13,6 +13,12 @@ const draftPost = contentPosts.find((post) => post.status !== "published");
 const portfolioStyles = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
 const tocSource = readFileSync(new URL("../app/article-toc.tsx", import.meta.url), "utf8");
 const frameSource = readFileSync(new URL("../app/site-frame.tsx", import.meta.url), "utf8");
+const staticNavigationSources = [
+  "../app/page.tsx",
+  "../app/notes/page.tsx",
+  "../app/notes/[slug]/page.tsx",
+  "../app/site-frame.tsx",
+].map((path) => readFileSync(new URL(path, import.meta.url), "utf8"));
 
 const developmentPreviewMeta =
   /<meta(?=[^>]*\bname=["']codex-preview["'])(?=[^>]*\bcontent=["']development["'])[^>]*>/i;
@@ -54,6 +60,7 @@ test("server-renders the Night Reading Room homepage", async () => {
   assert.match(html, /class="home-name-stage"/);
   assert.match(html, /class="[^"]*featured-sheet[^"]*"/);
   assert.match(html, /href="\/favicon\.svg\?v=2"/);
+  assert.match(html, /content="https:\/\/moonnomi\.github\.io\/social-card\.png"/);
   assert.match(html, /aria-label="Jump to latest posts"/);
   assert.match(html, /<h2>Latest posts<\/h2>/);
   if (publishedPost) {
@@ -127,6 +134,12 @@ test("search and route arrivals retain the low-glare interaction treatment", () 
   assert.match(frameSource, /<dialog[\s\S]*?aria-modal="true"/);
 });
 
+test("public navigation uses native links that work on static GitHub Pages", () => {
+  for (const source of staticNavigationSources) {
+    assert.doesNotMatch(source, /from ["']next\/link["']/);
+  }
+});
+
 test("the GitHub Pages build emits every public route and discovery asset", () => {
   const expectedPaths = [
     "../dist/client/index.html",
@@ -134,7 +147,7 @@ test("the GitHub Pages build emits every public route and discovery asset", () =
     "../dist/client/notes/index.html",
     "../dist/client/robots.txt",
     "../dist/client/sitemap.xml",
-    "../dist/client/og.png",
+    "../dist/client/social-card.png",
     ...contentPosts
       .filter((post) => post.status === "published")
       .map((post) => `../dist/client/notes/${post.slug}/index.html`),

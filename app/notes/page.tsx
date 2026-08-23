@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notes } from "../content";
+import { StaticLink } from "../static-link";
 
 export const metadata: Metadata = {
   title: "Posts",
@@ -17,7 +17,7 @@ export default function NotesPage() {
       <div className="catalog-list archive-catalog">
         {notes.length ? notes.map((note) => (
           <article className="catalog-entry" key={note.slug}>
-            <Link className="catalog-entry-link" href={`/notes/${note.slug}`}>
+            <StaticLink className="catalog-entry-link" href={`/notes/${note.slug}`}>
               <div className="catalog-date">
                 <time>{note.date}</time>
                 <span>{note.readingTime}</span>
@@ -30,7 +30,7 @@ export default function NotesPage() {
               <div className="tag-row catalog-tags">
                 {note.tags.map((tag) => <span key={tag}>#{tag}</span>)}
               </div>
-            </Link>
+            </StaticLink>
           </article>
         )) : <p className="catalog-empty">No published posts yet.</p>}
       </div>

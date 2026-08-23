@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { siteContent } from "./content";
 import { ContentLinks } from "./content-links";
+import { StaticLink } from "./static-link";
 import { VortexMark } from "./vortex-mark";
 
 type SearchItem = {
@@ -98,9 +98,9 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
 
       <header className="site-header">
         <div className="shell header-inner">
-          <Link className="brand" href="/" aria-label={`${siteContent.name} home`}>
+          <StaticLink className="brand" href="/" aria-label={`${siteContent.name} home`}>
             <VortexMark className="brand-vortex" />
-          </Link>
+          </StaticLink>
 
           <button
             className="menu-toggle"
@@ -113,8 +113,8 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
           </button>
 
           <nav id="primary-navigation" className={`site-nav${menuOpen ? " is-open" : ""}`} aria-label="Primary navigation">
-            <Link href="/notes" onClick={() => setMenuOpen(false)}>Posts</Link>
-            <Link href="/about" onClick={() => setMenuOpen(false)}>About</Link>
+            <StaticLink href="/notes" onClick={() => setMenuOpen(false)}>Posts</StaticLink>
+            <StaticLink href="/about" onClick={() => setMenuOpen(false)}>About</StaticLink>
             <button
               ref={searchButtonRef}
               type="button"
@@ -203,7 +203,7 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
 
               <div className="search-results" aria-live="polite">
                 {results.length ? results.map((item, index) => (
-                  <Link
+                  <StaticLink
                     key={item.slug}
                     className={selectedIndex === index ? "is-selected" : ""}
                     href={`/notes/${item.slug}`}
@@ -212,7 +212,7 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
                   >
                     <strong>{item.title}</strong>
                     <span>{item.summary}</span>
-                  </Link>
+                  </StaticLink>
                 )) : <p>No matching posts. Try a broader topic.</p>}
               </div>
             </div>

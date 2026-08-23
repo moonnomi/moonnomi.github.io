@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { ArticleToc } from "../../article-toc";
 import { CopyCode } from "../../copy-code";
 import { notes, type NoteBlock, type NoteSection } from "../../content";
+import { StaticLink } from "../../static-link";
 
 function legacyBlocks(section: NoteSection): NoteBlock[] {
   return [
@@ -122,7 +122,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
     <article className="reading-room-article">
       <div className="shell article-paper">
         <header className="article-header">
-          <Link className="back-link" href="/notes">Back to posts</Link>
+          <StaticLink className="back-link" href="/notes">Back to posts</StaticLink>
           <h1>{note.title}</h1>
           <p className="article-summary">{note.summary}</p>
           <div className="article-meta">
@@ -152,8 +152,8 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
             ))}
 
             <nav className="post-navigation" aria-label="Adjacent write-ups">
-              {newer ? <Link href={`/notes/${newer.slug}`}><small>Newer</small><span>{newer.title}</span></Link> : <span />}
-              {older && <Link href={`/notes/${older.slug}`}><small>Older</small><span>{older.title}</span></Link>}
+              {newer ? <StaticLink href={`/notes/${newer.slug}`}><small>Newer</small><span>{newer.title}</span></StaticLink> : <span />}
+              {older && <StaticLink href={`/notes/${older.slug}`}><small>Older</small><span>{older.title}</span></StaticLink>}
             </nav>
           </div>
 

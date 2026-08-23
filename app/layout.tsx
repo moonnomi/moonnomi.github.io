@@ -27,10 +27,10 @@ export const metadata: Metadata = {
     description,
     images: [
       {
-        url: "/og.png",
+        url: "/social-card.png",
         width: 1200,
         height: 630,
-        alt: "nomi — reverse engineering notes",
+        alt: "nomi",
       },
     ],
   },
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteContent.name,
     description,
-    images: ["/og.png"],
+    images: ["/social-card.png"],
   },
 };
 
