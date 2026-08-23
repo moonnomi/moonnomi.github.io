@@ -10,7 +10,15 @@ const contentRoot = path.join(projectRoot, "content");
 const backupRoot = path.join(projectRoot, ".nomi-studio", "backups");
 const postsPath = path.join(contentRoot, "posts.json");
 const sitePath = path.join(contentRoot, "site.json");
+const publicRoot = path.join(projectRoot, "public");
 const markdownFence = String.fromCharCode(96).repeat(3);
+const maximumImageBytes = 8 * 1024 * 1024;
+const imageTypes = new Map([
+  ["image/png", { extension: ".png", signature: (bytes) => bytes.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex")) }],
+  ["image/jpeg", { extension: ".jpg", signature: (bytes) => bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff }],
+  ["image/gif", { extension: ".gif", signature: (bytes) => ["GIF87a", "GIF89a"].includes(bytes.subarray(0, 6).toString("ascii")) }],
+  ["image/webp", { extension: ".webp", signature: (bytes) => bytes.subarray(0, 4).toString("ascii") === "RIFF" && bytes.subarray(8, 12).toString("ascii") === "WEBP" }],
+]);
 
 try {
   process.loadEnvFile(path.join(projectRoot, ".env.local"));
@@ -85,6 +93,30 @@ function uniqueSectionId(title, usedIds) {
   }
   usedIds.add(candidate);
   return candidate;
+}
+
+function normalizeImageSource(value) {
+  const source = requireString(value, "Image source", 500);
+  if (
+    !source.startsWith("/") ||
+    source.startsWith("//") ||
+    source.includes("\\") ||
+    source.includes("?") ||
+    source.includes("#") ||
+    path.posix.normalize(source) !== source ||
+    !/^\/[a-zA-Z0-9/_-]+\.(?:png|jpe?g|gif|webp)$/i.test(source)
+  ) {
+    throw new RequestError(400, "Image sources must be safe site-relative PNG, JPEG, GIF, or WebP paths.");
+  }
+  return source;
+}
+
+function normalizeImageDimension(value, label) {
+  const dimension = Number(value);
+  if (!Number.isInteger(dimension) || dimension < 1 || dimension > 20_000) {
+    throw new RequestError(400, label + " must be a whole number between 1 and 20000.");
+  }
+  return dimension;
 }
 
 export function markdownToSections(markdown) {
@@ -183,6 +215,44 @@ export function markdownToSections(markdown) {
       continue;
     }
 
+    if (line.trim() === ":::image") {
+      flushParagraph();
+      const current = ensureSection();
+      const fields = new Map();
+      let closed = false;
+      while (index + 1 < lines.length) {
+        index += 1;
+        const imageLine = lines[index].trim();
+        if (imageLine === ":::") {
+          closed = true;
+          break;
+        }
+        if (!imageLine) continue;
+        const separator = imageLine.indexOf(":");
+        if (separator < 1) {
+          throw new RequestError(400, "Image lines must use \"field: value\".");
+        }
+        const key = imageLine.slice(0, separator).trim().toLowerCase();
+        if (!new Set(["src", "alt", "caption", "width", "height"]).has(key)) {
+          throw new RequestError(400, "Unknown image field: " + key + ".");
+        }
+        if (fields.has(key)) throw new RequestError(400, "Image field \"" + key + "\" appears more than once.");
+        fields.set(key, imageLine.slice(separator + 1).trim());
+      }
+      if (!closed) throw new RequestError(400, "An image block is missing its closing :::.");
+      const image = {
+        type: "image",
+        src: normalizeImageSource(fields.get("src")),
+        alt: requireString(fields.get("alt"), "Image alt text", 500),
+        caption: optionalString(fields.get("caption"), 500),
+        width: normalizeImageDimension(fields.get("width"), "Image width"),
+        height: normalizeImageDimension(fields.get("height"), "Image height"),
+      };
+      current.blocks ??= [];
+      current.blocks.push(image);
+      continue;
+    }
+
     const bullet = line.match(/^[-*]\s+(.+)$/);
     if (bullet) {
       flushParagraph();
@@ -237,6 +307,17 @@ export function sectionsToMarkdown(sections) {
           );
         }
         if (block.type === "list") parts.push(block.items.map((item) => "- " + item).join("\n"));
+        if (block.type === "image") {
+          parts.push([
+            ":::image",
+            "src: " + block.src,
+            "alt: " + block.alt,
+            ...(block.caption ? ["caption: " + block.caption] : []),
+            "width: " + block.width,
+            "height: " + block.height,
+            ":::"
+          ].join("\n"));
+        }
         if (block.type === "code") {
           const info = [block.language, block.label].filter(Boolean).join(" ");
           parts.push(markdownFence + info + "\n" + block.value + "\n" + markdownFence);
@@ -303,34 +384,53 @@ export function normalizePost(value) {
   };
 }
 
-function normalizeLinkUrl(value, kind) {
+function normalizeLinkUrl(value) {
   const url = optionalString(value, 500);
   if (!url) return "";
-  if (kind === "email") {
-    const address = url.replace(/^mailto:/i, "");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) {
-      throw new RequestError(400, "Email must be a valid address.");
-    }
-    return address;
-  }
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(url)) return url;
   if (url.startsWith("/") && !url.startsWith("//")) return url;
   let parsed;
   try {
     parsed = new URL(url);
   } catch {
-    throw new RequestError(400, "Links must use https://, http://, or a site-relative path.");
+    throw new RequestError(400, "Link URLs must use https://, http://, mailto:, or a site-relative path.");
+  }
+  if (parsed.protocol === "mailto:") {
+    const address = parsed.pathname;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) {
+      throw new RequestError(400, "Email links must contain a valid address.");
+    }
+    return "mailto:" + address;
   }
   if (!new Set(["https:", "http:"]).has(parsed.protocol)) {
-    throw new RequestError(400, "Links must use a safe http or https address.");
+    throw new RequestError(400, "Links must use a safe https, http, mailto, or site-relative address.");
   }
   return parsed.href;
 }
 
-function normalizeSite(value) {
-  const link = (key, fallbackLabel) => ({
-    label: optionalString(value.links?.[key]?.label, 40) || fallbackLabel,
-    url: normalizeLinkUrl(value.links?.[key]?.url, key),
-  });
+function linkValues(links) {
+  if (Array.isArray(links)) return links;
+  if (!links || typeof links !== "object") return [];
+  return Object.entries(links).map(([key, link]) => ({
+    label: link?.label || key.charAt(0).toUpperCase() + key.slice(1),
+    url: link?.url || "",
+  }));
+}
+
+export function normalizeSite(value) {
+  const rawLinks = linkValues(value.links);
+  if (rawLinks.length > 12) {
+    throw new RequestError(400, "The site can show up to 12 social links.");
+  }
+  const links = rawLinks
+    .map((link, index) => {
+      const label = optionalString(link?.label, 40);
+      const url = normalizeLinkUrl(link?.url);
+      if (!label && !url) return null;
+      if (!label) throw new RequestError(400, "Link " + (index + 1) + " needs a label.");
+      return { label, url };
+    })
+    .filter(Boolean);
   const aboutParagraphs = (Array.isArray(value.aboutParagraphs)
     ? value.aboutParagraphs
     : String(value.aboutParagraphs ?? "").split(/\n\s*\n/)
@@ -348,11 +448,7 @@ function normalizeSite(value) {
     aboutLead: requireString(value.aboutLead, "About lead", 700),
     aboutParagraphs,
     learningTopics,
-    links: {
-      github: link("github", "GitHub"),
-      email: link("email", "Email"),
-      resume: link("resume", "Resume"),
-    },
+    links,
   };
 }
 
@@ -392,6 +488,58 @@ async function readBody(request, limit = 512_000) {
   }
 }
 
+function normalizeImageUpload(value) {
+  const postSlug = slugify(value.postSlug);
+  if (!postSlug || postSlug !== String(value.postSlug ?? "")) {
+    throw new RequestError(400, "Save the post with a valid slug before uploading an image.");
+  }
+  const mimeType = requireString(value.mimeType, "Image type", 40).toLowerCase();
+  const imageType = imageTypes.get(mimeType);
+  if (!imageType) throw new RequestError(415, "Use a PNG, JPEG, GIF, or WebP image.");
+
+  const encoded = requireString(value.data, "Image data", Math.ceil(maximumImageBytes * 4 / 3) + 8);
+  if (!/^[a-zA-Z0-9+/]+={0,2}$/.test(encoded) || encoded.length % 4 !== 0) {
+    throw new RequestError(400, "The uploaded image data is invalid.");
+  }
+  const bytes = Buffer.from(encoded, "base64");
+  if (!bytes.length || bytes.length > maximumImageBytes) {
+    throw new RequestError(413, "Images must be 8 MB or smaller.");
+  }
+  if (!imageType.signature(bytes)) {
+    throw new RequestError(415, "The file contents do not match the selected image type.");
+  }
+
+  const originalName = path.basename(requireString(value.filename, "Image filename", 240));
+  const stem = slugify(path.parse(originalName).name) || "image";
+  return {
+    postSlug,
+    stem,
+    extension: imageType.extension,
+    bytes,
+    width: normalizeImageDimension(value.width, "Image width"),
+    height: normalizeImageDimension(value.height, "Image height"),
+  };
+}
+
+async function writeUniqueImage(targetPublicRoot, upload) {
+  const directory = path.resolve(targetPublicRoot, "posts", upload.postSlug);
+  const relativeDirectory = path.relative(targetPublicRoot, directory);
+  if (relativeDirectory.startsWith("..") || path.isAbsolute(relativeDirectory)) {
+    throw new RequestError(400, "The image target is outside the public asset directory.");
+  }
+  await mkdir(directory, { recursive: true });
+  for (let suffix = 1; suffix <= 999; suffix += 1) {
+    const filename = upload.stem + (suffix === 1 ? "" : "-" + suffix) + upload.extension;
+    try {
+      await writeFile(path.join(directory, filename), upload.bytes, { flag: "wx" });
+      return "/posts/" + upload.postSlug + "/" + filename;
+    } catch (error) {
+      if (error?.code !== "EEXIST") throw error;
+    }
+  }
+  throw new RequestError(409, "Too many images use that filename. Rename the file and try again.");
+}
+
 function sendJson(response, status, value, extraHeaders = {}) {
   response.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
@@ -420,6 +568,7 @@ export async function startStudio(options = {}) {
   const activePostsPath = path.resolve(options.postsPath ?? postsPath);
   const activeSitePath = path.resolve(options.sitePath ?? sitePath);
   const activeBackupRoot = path.resolve(options.backupRoot ?? backupRoot);
+  const activePublicRoot = path.resolve(options.publicRoot ?? publicRoot);
   const sessionTokens = new Map();
   const allowedHosts = new Set(["127.0.0.1:" + port, "localhost:" + port]);
   const allowedOrigins = new Set(["http://127.0.0.1:" + port, "http://localhost:" + port]);
@@ -453,7 +602,7 @@ export async function startStudio(options = {}) {
     response.setHeader("X-Frame-Options", "DENY");
     response.setHeader(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+      "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
     );
 
     try {
@@ -574,6 +723,18 @@ export async function startStudio(options = {}) {
           await writeJson(activePostsPath, "posts", posts, activeBackupRoot);
         });
         sendJson(response, existingIndex >= 0 ? 200 : 201, { post: editorPost(post) });
+        return;
+      }
+
+      if (request.method === "POST" && pathname === "/api/images") {
+        requireOrigin(request);
+        const upload = normalizeImageUpload(await readBody(request, 12_000_000));
+        const posts = await readJson(activePostsPath);
+        if (!posts.some((post) => post.slug === upload.postSlug)) {
+          throw new RequestError(404, "Save the post before uploading its first image.");
+        }
+        const src = await serializeMutation(() => writeUniqueImage(activePublicRoot, upload));
+        sendJson(response, 201, { image: { src, width: upload.width, height: upload.height } });
         return;
       }
 

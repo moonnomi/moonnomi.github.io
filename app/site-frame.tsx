@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { siteContent } from "./content";
@@ -15,6 +16,7 @@ type SearchItem = {
 };
 
 export function SiteFrame({ children, searchItems }: { children: ReactNode; searchItems: SearchItem[] }) {
+  const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -130,7 +132,11 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
         </div>
       </header>
 
-      <main id="main-content">{children}</main>
+      <main id="main-content">
+        {pathname === "/" ? children : (
+          <div className="page-arrival" key={pathname}>{children}</div>
+        )}
+      </main>
 
       <footer className="site-footer">
         <div className="shell footer-inner">
@@ -141,9 +147,11 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
               <span>{siteContent.footerTagline}</span>
             </div>
           </div>
-          <div className="footer-links" aria-label="Contact details">
-            <ContentLinks links={siteContent.links} />
-          </div>
+          {siteContent.links.length > 0 && (
+            <div className="footer-links" aria-label="Contact details">
+              <ContentLinks links={siteContent.links} />
+            </div>
+          )}
         </div>
       </footer>
 
@@ -155,6 +163,7 @@ export function SiteFrame({ children, searchItems }: { children: ReactNode; sear
             id="site-search"
             ref={searchSheetRef}
             className="search-sheet"
+            aria-modal="true"
             aria-labelledby="search-title"
             onKeyDown={handleSearchKeyDown}
           >

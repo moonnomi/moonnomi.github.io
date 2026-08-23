@@ -6,20 +6,13 @@ import "./globals.css";
 import { SiteFrame } from "./site-frame";
 
 const description = siteContent.introduction;
-
-const designContract = `<!--
-THESIS: A beginner's growing body of work appears as one quiet reading-room catalogue, refusing the familiar terminal-blog stack.
-OWN-WORLD: An onyx room holds platinum reading sheets with teal edges; a hand-redrawn teal vortex identifies nomi, Archivo leads, Public Sans reads, and mono is reserved for dates and code.
-STORY: Visitors meet an honest learner, open the newest write-up, then scan the dated archive and read further.
-FIRST VIEWPORT: A restrained logo-only header opens to a two-column room: identity and purpose on the left, one low-glare featured reading sheet on the right; a small chevron points toward the latest posts at the fold.
-FORM: Night Reading Room, grounded direction 4, seed 7fdc7752.
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
--->`;
+const siteUrl = new URL("https://moonnomi.github.io");
 
 export const metadata: Metadata = {
+  metadataBase: siteUrl,
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
-    shortcut: "/favicon.svg",
+    icon: [{ url: "/favicon.svg?v=2", type: "image/svg+xml", sizes: "any" }],
+    shortcut: "/favicon.svg?v=2",
   },
   title: {
     default: siteContent.name,
@@ -28,13 +21,24 @@ export const metadata: Metadata = {
   description,
   openGraph: {
     type: "website",
+    url: "/",
+    siteName: siteContent.name,
     title: siteContent.name,
     description,
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "nomi — reverse engineering notes",
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: siteContent.name,
     description,
+    images: ["/og.png"],
   },
 };
 
@@ -48,8 +52,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" sizes="any" />
+        <link rel="shortcut icon" href="/favicon.svg?v=2" type="image/svg+xml" />
+      </head>
       <body>
-        <template aria-hidden="true" dangerouslySetInnerHTML={{ __html: designContract }} />
         <SiteFrame searchItems={searchItems}>{children}</SiteFrame>
       </body>
     </html>

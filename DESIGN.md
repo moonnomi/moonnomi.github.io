@@ -67,6 +67,7 @@ typography:
     lineHeight: 1.75
 rounded:
   square: "0px"
+  inline: "4px"
   panel: "12px"
   sheet: "14px"
 spacing:
@@ -150,8 +151,8 @@ components:
     padding: "17px 18px"
     width: "100%"
   search-result-selected:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.ink}"
+    backgroundColor: "{colors.article-surface-raised}"
+    textColor: "{colors.article-ink}"
     typography: "{typography.body}"
     rounded: "{rounded.square}"
     padding: "17px 18px"
@@ -287,7 +288,7 @@ The palette moves between near-black room tones and low-glare charcoal-teal read
 
 The primary shell is capped at 1120px with 24px desktop side insets, tightening to 16px at 720px and 14px at 520px. A sticky 72px header frames the room and becomes 64px on compact screens. Major sections use 76-140px vertical breathing room, while component spacing follows a compact 4, 8, 12, 16, 24, 32, 48, and 72px rhythm.
 
-The homepage opens as a 0.8/1.2 two-column room with a 440px minimum reading-sheet column and a fluid 48–96px gap. A small centered chevron cues the Latest posts section at the fold. The posts archive uses one unaccompanied title before returning to full-width catalogue rows. Article interiors center a 720px reading column beside a 200px contents rail with a 52–88px gap.
+The homepage opens as a 0.8/1.2 two-column room with a 440px minimum reading-sheet column and a fluid 48–96px gap. A small centered chevron cues the Latest posts section at the fold. The posts archive uses one unaccompanied title before returning to full-width catalogue rows. Article interiors use a wider 1240px sheet, bias an up-to-820px content column toward the left, and separate it from a 190–230px “On this page” rail on the far right.
 
 At 900px, catalogue metadata and tags reflow and the article rail narrows. At 720px, primary grids collapse, navigation becomes a stacked menu, the table of contents becomes a native disclosure, and article paper runs edge to edge without radius or shadow. At 520px, catalogue rows and adjacent-post links become single-column and major padding contracts without reducing reading type.
 
@@ -350,7 +351,7 @@ Components are refined and restrained: state changes are precise, readable, and 
 - **Brand:** The home link is a static 28px teal vortex with an accessible name and no repeated wordmark.
 - **Continuation cue:** A small CSS-drawn chevron briefly nudges downward toward Latest posts, remains a 44px link target, and becomes still when reduced motion is requested.
 - **Mobile:** Below 720px, links stack beneath the 64px header with 12px vertical hit areas and a one-pixel bottom boundary.
-- **Search:** A full-width Raised Room sheet descends beneath the header over a translucent onyx dismissal layer. Results become Platinum Paper with Reading Ink when keyboard-selected or hovered.
+- **Search:** A full-width Raised Room sheet descends beneath the header over a translucent onyx dismissal layer. Results move into Raised Article Surface with Article Ink when keyboard-selected or hovered, preserving the room's low-glare character.
 
 ### Vortex Identity Mark
 
@@ -358,9 +359,13 @@ The homepage uses a 116px teal SVG mark whose seven closely related hand-drawn p
 
 **The Vortex Identity Rule.** Redrawing belongs only to the homepage arrival mark. Every identity placement uses the exact Edge Teal token at full opacity; compact marks share one static path, round caps, and no decorative container.
 
+### Route Arrival
+
+Non-home routes use one restrained 560ms reveal built from the homepage's existing motion language: content begins visibly present, then resolves from a shallow crop, soft blur, and reduced saturation. It runs once per navigation, leaves the sticky reading layout untouched after settling, and disappears entirely when reduced motion is requested.
+
 ### Article Reading Sheet
 
-The article sheet combines a large editorial header, generous 17px/1.82 low-glare reading copy, raised charcoal-teal evidence lists, dark code blocks, a sticky desktop contents rail, a native mobile disclosure, and simple ruled adjacent-post navigation.
+The article sheet combines a left-biased editorial header, generous 17px/1.82 low-glare reading copy, teal monospace tokens for inline variable and function names, raised charcoal-teal evidence lists, dark code blocks, a sticky desktop “On this page” rail with a teal current-section marker, a native compact disclosure below 900px, and simple ruled adjacent-post navigation. The sheet uses `overflow: clip` so its rounded boundary does not disable viewport-relative sticky positioning.
 
 ### Named Rules
 

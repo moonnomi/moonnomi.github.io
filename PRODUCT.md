@@ -27,9 +27,10 @@ Visitors will usually arrive from a CV, scholarship application, or college appl
 - The current focus is documentation and technical write-ups.
 - Tools and project downloads may be added later, but they are not part of the present scope.
 - The site remains a small multi-page blog with a homepage, post index, individual posts, an about page, and search.
-- The displayed name is “nomi.” Account names and contact details remain blank placeholders until the author supplies them.
+- The displayed name is “nomi.” Public profile and contact links are supplied through the local site data.
 - The identity mark is a hand-drawn teal vortex. It redraws through closely related imperfect frames only on the homepage; compact placements use a static frame.
 - A private authoring studio runs only on the author's computer. It edits versionable content files, supports draft and published posts, and creates a local backup before every save or deletion.
+- Site details include an ordered, optional list of social and contact links that the author can add, remove, and rearrange without code changes.
 - The authoring studio is not deployed with the public portfolio and requires a local password.
 - The interface must remain readable, restrained, responsive, and straightforward to maintain.
 
@@ -42,8 +43,8 @@ Visitors will usually arrive from a CV, scholarship application, or college appl
 
 ## Evidence on Hand
 
-- The repository contains three sample reverse-engineering and malware-analysis posts.
-- Those entries currently function as illustrative portfolio content and are not confirmed as the author's completed work.
+- The repository contains one published crackme write-up and three private draft templates.
+- Only entries explicitly marked as published are included in public lists, search, sitemaps, and generated routes.
 - The name “nomi” and the hand-drawn vortex identity are confirmed. No confirmed biography, credentials, tools, awards, testimonials, or production research artifacts are available yet. Future work must not fabricate them.
 
 ## Product Principles

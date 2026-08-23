@@ -110,6 +110,74 @@ function slugify(value) {
     .slice(0, 80);
 }
 
+function fileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      const result = String(reader.result ?? "");
+      const separator = result.indexOf(",");
+      if (separator < 0) reject(new Error("The selected image could not be read."));
+      else resolve(result.slice(separator + 1));
+    });
+    reader.addEventListener("error", () => reject(new Error("The selected image could not be read.")));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function imageDimensions(file) {
+  if (typeof window.createImageBitmap === "function") {
+    try {
+      const bitmap = await window.createImageBitmap(file);
+      const dimensions = { width: bitmap.width, height: bitmap.height };
+      bitmap.close();
+      return dimensions;
+    } catch {
+      // Fall back to an image element for browsers with partial format support.
+    }
+  }
+
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    const release = () => URL.revokeObjectURL(objectUrl);
+    image.addEventListener("load", () => {
+      const dimensions = { width: image.naturalWidth, height: image.naturalHeight };
+      release();
+      resolve(dimensions);
+    });
+    image.addEventListener("error", () => {
+      release();
+      reject(new Error("The selected file could not be decoded as a PNG, JPEG, GIF, or WebP image."));
+    });
+    image.src = objectUrl;
+  });
+}
+
+function insertImageBlock(image, alt, caption) {
+  const editor = byId("post-body");
+  const start = editor.selectionStart;
+  const end = editor.selectionEnd;
+  const before = editor.value.slice(0, start);
+  const after = editor.value.slice(end);
+  const prefix = !before || before.endsWith("\n\n") ? "" : before.endsWith("\n") ? "\n" : "\n\n";
+  const suffix = !after || after.startsWith("\n\n") ? "" : after.startsWith("\n") ? "\n" : "\n\n";
+  const lines = [
+    ":::image",
+    "src: " + image.src,
+    "alt: " + alt.replace(/\s+/g, " ").trim(),
+    ...(caption ? ["caption: " + caption.replace(/\s+/g, " ").trim()] : []),
+    "width: " + image.width,
+    "height: " + image.height,
+    ":::",
+  ];
+  const insertion = prefix + lines.join("\n") + suffix;
+  editor.value = before + insertion + after;
+  const cursor = before.length + insertion.length;
+  editor.setSelectionRange(cursor, cursor);
+  editor.dispatchEvent(new Event("input", { bubbles: true }));
+  editor.focus();
+}
+
 function renderPostList() {
   const list = byId("post-list");
   list.replaceChildren();
@@ -190,6 +258,10 @@ function renderPostEditor() {
   byId("post-is-sample").checked = Boolean(post.isSample);
   byId("post-body").value = post.body;
   byId("delete-post-button").hidden = studioState.isNew;
+  byId("insert-image-button").disabled = studioState.isNew;
+  byId("post-image-hint").textContent = studioState.isNew
+    ? "Save this draft once before uploading its first image."
+    : "Images are stored with this post and inserted at the cursor.";
   updatePreviewLink();
 }
 
@@ -253,6 +325,88 @@ function readPostForm() {
   };
 }
 
+function siteLinkValues(links) {
+  if (Array.isArray(links)) return links;
+  if (!links || typeof links !== "object") return [];
+  return Object.entries(links).map(([key, link]) => ({
+    label: link?.label || key.charAt(0).toUpperCase() + key.slice(1),
+    url: link?.url || "",
+  }));
+}
+
+function readSiteLinks() {
+  return Array.from(document.querySelectorAll(".site-link-row")).map((row) => ({
+    label: row.querySelector(".site-link-label").value,
+    url: row.querySelector(".site-link-url").value,
+  }));
+}
+
+function renderSiteLinks(links) {
+  const list = byId("site-links");
+  list.replaceChildren();
+  byId("site-links-empty").hidden = links.length > 0;
+  byId("add-site-link").disabled = links.length >= 12;
+
+  links.forEach((link, index) => {
+    const row = document.createElement("div");
+    row.className = "site-link-row";
+    row.dataset.linkIndex = String(index);
+    row.setAttribute("role", "group");
+    row.setAttribute("aria-label", "Social link " + (index + 1));
+
+    const heading = document.createElement("div");
+    heading.className = "site-link-row-heading";
+    const title = document.createElement("strong");
+    title.textContent = "Link " + (index + 1);
+    const actions = document.createElement("div");
+    actions.className = "site-link-row-actions";
+
+    const action = (label, name, disabled = false) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = name === "remove" ? "link-row-action is-remove" : "link-row-action";
+      button.dataset.linkAction = name;
+      button.textContent = label;
+      button.disabled = disabled;
+      button.setAttribute("aria-label", label + " social link " + (index + 1));
+      return button;
+    };
+
+    actions.append(
+      action("Up", "up", index === 0),
+      action("Down", "down", index === links.length - 1),
+      action("Remove", "remove"),
+    );
+    heading.append(title, actions);
+
+    const fields = document.createElement("div");
+    fields.className = "site-link-fields";
+    const labelField = document.createElement("label");
+    labelField.textContent = "Label";
+    const labelInput = document.createElement("input");
+    labelInput.className = "site-link-label";
+    labelInput.maxLength = 40;
+    labelInput.placeholder = "LinkedIn";
+    labelInput.value = link.label || "";
+    labelField.append(labelInput);
+
+    const urlField = document.createElement("label");
+    urlField.textContent = "URL or email address";
+    const urlInput = document.createElement("input");
+    urlInput.className = "site-link-url";
+    urlInput.maxLength = 500;
+    urlInput.inputMode = "url";
+    urlInput.autocomplete = "url";
+    urlInput.placeholder = "https://example.com/profile";
+    urlInput.value = link.url || "";
+    urlField.append(urlInput);
+
+    fields.append(labelField, urlField);
+    row.append(heading, fields);
+    list.append(row);
+  });
+}
+
 function fillSiteForm() {
   const site = studioState.site;
   if (!site) return;
@@ -263,17 +417,10 @@ function fillSiteForm() {
   byId("site-about-lead").value = site.aboutLead;
   byId("site-about-paragraphs").value = site.aboutParagraphs.join("\n\n");
   byId("site-learning-topics").value = site.learningTopics.join("\n");
-  for (const key of ["github", "email", "resume"]) {
-    byId(key + "-label").value = site.links[key].label;
-    byId(key + "-url").value = site.links[key].url;
-  }
+  renderSiteLinks(siteLinkValues(site.links));
 }
 
 function readSiteForm() {
-  const link = (key) => ({
-    label: byId(key + "-label").value,
-    url: byId(key + "-url").value,
-  });
   return {
     name: byId("site-name").value,
     role: byId("site-role").value,
@@ -288,11 +435,7 @@ function readSiteForm() {
       .split("\n")
       .map((topic) => topic.trim())
       .filter(Boolean),
-    links: {
-      github: link("github"),
-      email: link("email"),
-      resume: link("resume"),
-    },
+    links: readSiteLinks(),
   };
 }
 
@@ -376,8 +519,104 @@ byId("post-slug").addEventListener("input", () => {
   studioState.slugTouched = true;
 });
 
-byId("post-form").addEventListener("input", () => setDirty(true));
+byId("post-form").addEventListener("input", (event) => {
+  if (!event.target.closest(".image-insert")) setDirty(true);
+});
 byId("site-form").addEventListener("input", () => setDirty(true));
+
+byId("add-site-link").addEventListener("click", () => {
+  const links = readSiteLinks();
+  if (links.length >= 12) {
+    notify("The site can show up to 12 social links.", "error");
+    return;
+  }
+  links.push({ label: "", url: "" });
+  renderSiteLinks(links);
+  setDirty(true);
+  window.requestAnimationFrame(() => {
+    document.querySelector(`.site-link-row[data-link-index="${links.length - 1}"] .site-link-label`)?.focus();
+  });
+});
+
+byId("site-links").addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-link-action]");
+  if (!button) return;
+  const row = button.closest(".site-link-row");
+  const index = Number(row?.dataset.linkIndex);
+  const links = readSiteLinks();
+  if (!Number.isInteger(index) || !links[index]) return;
+
+  let focusIndex = index;
+  if (button.dataset.linkAction === "remove") {
+    links.splice(index, 1);
+    focusIndex = Math.min(index, links.length - 1);
+  } else {
+    const offset = button.dataset.linkAction === "up" ? -1 : 1;
+    const targetIndex = index + offset;
+    if (!links[targetIndex]) return;
+    [links[index], links[targetIndex]] = [links[targetIndex], links[index]];
+    focusIndex = targetIndex;
+  }
+
+  renderSiteLinks(links);
+  setDirty(true);
+  window.requestAnimationFrame(() => {
+    if (focusIndex < 0) byId("add-site-link").focus();
+    else document.querySelector(`.site-link-row[data-link-index="${focusIndex}"] .site-link-label`)?.focus();
+  });
+});
+
+byId("insert-image-button").addEventListener("click", async () => {
+  if (studioState.isNew || studioState.mutating) return;
+  const file = byId("post-image-file").files[0];
+  const alt = byId("post-image-alt").value.trim();
+  const caption = byId("post-image-caption").value.trim();
+  if (!file) {
+    notify("Choose an image file first.", "error");
+    return;
+  }
+  if (!alt) {
+    notify("Add alt text that describes what the image shows.", "error");
+    byId("post-image-alt").focus();
+    return;
+  }
+  if (file.size > 8 * 1024 * 1024) {
+    notify("Images must be 8 MB or smaller.", "error");
+    return;
+  }
+
+  studioState.mutating = true;
+  const button = byId("insert-image-button");
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  button.textContent = "Uploading...";
+  try {
+    const [data, dimensions] = await Promise.all([fileAsBase64(file), imageDimensions(file)]);
+    const payload = await api("/api/images", {
+      method: "POST",
+      body: JSON.stringify({
+        postSlug: studioState.originalSlug,
+        filename: file.name,
+        mimeType: file.type,
+        data,
+        ...dimensions,
+      }),
+    });
+    insertImageBlock(payload.image, alt, caption);
+    byId("post-image-file").value = "";
+    byId("post-image-alt").value = "";
+    byId("post-image-caption").value = "";
+    byId("insert-image-button").closest("details").open = false;
+    notify("Image inserted. Save the post when you are ready.");
+  } catch (error) {
+    handleRequestError(error);
+  } finally {
+    studioState.mutating = false;
+    button.disabled = false;
+    button.removeAttribute("aria-busy");
+    button.textContent = "Upload and insert";
+  }
+});
 
 byId("post-form").addEventListener("submit", async (event) => {
   event.preventDefault();

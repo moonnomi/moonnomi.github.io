@@ -5,26 +5,19 @@
   "footerTagline": "Just a beginner learning stuff.",
   "aboutLead": "My name is nomi. I am a beginner currently learning reverse engineering and malware analysis.",
   "aboutParagraphs": [
-    "I use this site to document what I understand, what I still need to learn, and how my approach changes over time. The goal is to build a clear record of steady progress through practical write-ups."
+    "I use this site to document what I understand, what I still need to learn, and how my approach changes over time."
   ],
   "learningTopics": [
-    "Executable structure and static analysis fundamentals",
-    "Dynamic analysis in controlled environments",
-    "Deobfuscation concepts and small recovery scripts",
-    "Writing reproducible technical notes"
+    "Still the basics"
   ],
-  "links": {
-    "github": {
+  "links": [
+    {
       "label": "GitHub",
-      "url": ""
+      "url": "https://github.com/moonnomi"
     },
-    "email": {
+    {
       "label": "Email",
-      "url": ""
-    },
-    "resume": {
-      "label": "Resume",
-      "url": ""
+      "url": "nomimono.a@proton.me"
     }
-  }
+  ]
 }

@@ -11,7 +11,7 @@ Homepage portfolio experience, with the posts archive and article surfaces suppo
 
 ## Audience, job, and proof
 
-CV, scholarship, and future college evaluators should quickly understand that the author is a beginner building skill through clear technical writing. The newest write-up and chronological archive are the proof; current entries are explicitly marked as sample content.
+CV, scholarship, and future college evaluators should quickly understand that the author is a beginner building skill through clear technical writing. The newest write-up and chronological archive are the proof; the current published crackme post is the author's work and illustrative drafts remain private.
 
 ## Direction and memorable moment
 
@@ -19,4 +19,4 @@ Night Reading Room. A compact identity and purpose column faces one low-glare ch
 
 ## Constraints and unresolved decisions
 
-Preserve simple routes, search, keyboard access, responsive reading, blank personal identifiers, and restrained copy. Avoid terminal-blog styling, dashboards, status telemetry, expertise claims, vintage decoration, and extra sections. Real identity, biography, contact links, and personal posts remain for the author to supply.
+Preserve simple routes, search, keyboard access, responsive reading, user-controlled contact links, and restrained copy. Avoid terminal-blog styling, dashboards, status telemetry, expertise claims, vintage decoration, and extra sections. Future biographical or project claims remain for the author to supply.

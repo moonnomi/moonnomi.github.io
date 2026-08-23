@@ -5,6 +5,7 @@ export type NoteBlock =
   | { type: "paragraph"; text: string }
   | { type: "list"; items: string[] }
   | { type: "evidence"; items: Array<[string, string]> }
+  | { type: "image"; src: string; alt: string; caption: string; width: number; height: number }
   | { type: "code"; language: string; label: string; value: string };
 
 export type NoteSection = {
@@ -47,11 +48,7 @@ export type SiteContent = {
   aboutLead: string;
   aboutParagraphs: string[];
   learningTopics: string[];
-  links: {
-    github: SiteLink;
-    email: SiteLink;
-    resume: SiteLink;
-  };
+  links: SiteLink[];
 };
 
 export const siteContent = siteData as SiteContent;

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
+import { ArticleToc } from "../../article-toc";
 import { CopyCode } from "../../copy-code";
 import { notes, type NoteBlock, type NoteSection } from "../../content";
 
@@ -13,19 +15,75 @@ function legacyBlocks(section: NoteSection): NoteBlock[] {
   ];
 }
 
+function safeInlineHref(value: string) {
+  if (value.startsWith("/") && !value.startsWith("//")) return value;
+
+  try {
+    const url = new URL(value);
+    return ["http:", "https:", "mailto:"].includes(url.protocol) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function InlineText({ text }: { text: string }) {
+  const parts: ReactNode[] = [];
+  const tokenPattern = /`([^`\n]+)`|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+  let cursor = 0;
+
+  for (const match of text.matchAll(tokenPattern)) {
+    const matchIndex = match.index ?? 0;
+    if (matchIndex > cursor) parts.push(text.slice(cursor, matchIndex));
+
+    if (match[1]) {
+      parts.push(<code className="inline-code" key={`code-${matchIndex}`}>{match[1]}</code>);
+    } else {
+      const href = safeInlineHref(match[3]);
+      parts.push(
+        href
+          ? <a className="inline-link" href={href} key={`link-${matchIndex}`}>{match[2]}</a>
+          : match[0],
+      );
+    }
+
+    cursor = matchIndex + match[0].length;
+  }
+
+  if (cursor < text.length) parts.push(text.slice(cursor));
+  return <>{parts}</>;
+}
+
 function ArticleBlock({ block, index }: { block: NoteBlock; index: number }) {
-  if (block.type === "paragraph") return <p>{block.text}</p>;
+  if (block.type === "paragraph") return <p><InlineText text={block.text} /></p>;
   if (block.type === "evidence") {
     return (
       <dl className="evidence-list">
         {block.items.map(([label, value]) => (
-          <div key={`${index}-${label}`}><dt>{label}</dt><dd>{value}</dd></div>
+          <div key={`${index}-${label}`}><dt>{label}</dt><dd><InlineText text={value} /></dd></div>
         ))}
       </dl>
     );
   }
   if (block.type === "list") {
-    return <ul className="article-list">{block.items.map((item) => <li key={item}>{item}</li>)}</ul>;
+    return <ul className="article-list">{block.items.map((item) => <li key={item}><InlineText text={item} /></li>)}</ul>;
+  }
+  if (block.type === "image") {
+    return (
+      <figure className="article-image">
+        {/* Native images keep local post assets compatible with a static GitHub Pages export. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="article-image-media"
+          src={block.src}
+          alt={block.alt}
+          width={block.width}
+          height={block.height}
+          loading="lazy"
+          decoding="async"
+        />
+        {block.caption && <figcaption><InlineText text={block.caption} /></figcaption>}
+      </figure>
+    );
   }
   return (
     <div className="code-block">
@@ -41,6 +99,8 @@ function ArticleBlock({ block, index }: { block: NoteBlock; index: number }) {
 export function generateStaticParams() {
   return notes.map((note) => ({ slug: note.slug }));
 }
+
+export const dynamicParams = false;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -76,7 +136,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
         </header>
 
         <details className="mobile-toc">
-          <summary>Contents</summary>
+          <summary>On this page</summary>
           {note.sections.map((section) => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}
         </details>
 
@@ -97,10 +157,7 @@ export default async function NotePage({ params }: { params: Promise<{ slug: str
             </nav>
           </div>
 
-          <aside className="article-toc" aria-label="Contents">
-            <strong>Contents</strong>
-            {note.sections.map((section) => <a key={section.id} href={`#${section.id}`}>{section.title}</a>)}
-          </aside>
+          <ArticleToc sections={note.sections.map(({ id, title }) => ({ id, title }))} />
         </div>
       </div>
     </article>

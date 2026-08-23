@@ -1,10 +1,10 @@
 [
   {
     "slug": "what-password-two-ways",
-    "title": "Solving what_password two ways",
-    "summary": "My first crackme write-up: tracing a byte-by-byte password check, rebuilding its transformation in Python, and bypassing it with a small control-flow patch.",
+    "title": "First Post - what_password crackme",
+    "summary": "Taking apart a small x86-64 crackme in Binary Ninja, recovering its password with Python, then patching the check so any input works.",
     "date": "2026.08.23",
-    "readingTime": "4 min",
+    "readingTime": "3 min",
     "tags": [
       "crackme",
       "binary-ninja",
@@ -12,20 +12,28 @@
       "python",
       "binary-patching"
     ],
-    "status": "draft",
+    "status": "published",
     "isSample": false,
     "sections": [
       {
-        "id": "starting-point",
-        "title": "Starting point",
+        "id": "initial-look",
+        "title": "Initial look",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "This is a small crackme challenge rather than a real malware sample. Running the program gave me no prompt: it simply waited for input, then printed \"Incorrect password!\" after a wrong guess. Instead of trying to brute-force it, I wanted to understand how the password check worked."
+            "text": "Running `what_password` doesn't print a prompt. It just waits for input, then prints `Incorrect password!` if the guess is wrong."
+          },
+          {
+            "type": "image",
+            "src": "/posts/what-password-two-ways/screenshot-1-first.png",
+            "alt": "Terminal showing the what_password crackme rejecting several incorrect password guesses.",
+            "caption": "",
+            "width": 881,
+            "height": 137
           },
           {
             "type": "paragraph",
-            "text": "I opened the binary in Binary Ninja and started from main. The file was a 64-bit x86 ELF with symbols and debug information still present, which made it a friendly first target."
+            "text": "I opened the binary in Binary Ninja and jumped to `main`. It's a 64-bit x86 ELF, and the symbols haven't been stripped, so there isn't much hunting around to do."
           },
           {
             "type": "evidence",
@@ -43,6 +51,10 @@
                 "Binary Ninja"
               ],
               [
+                "original crackme",
+                "[View on crackmes.one](https://crackmes.one/crackme/6a83e2f205a9e80a90724421)"
+              ],
+              [
                 "main",
                 "0x401150"
               ],
@@ -55,16 +67,24 @@
         ]
       },
       {
-        "id": "reading-the-password-check",
-        "title": "Reading the password check",
+        "id": "the-password-check",
+        "title": "The password check",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "The program first reads up to 0x400 bytes from standard input. It then compares the input one byte at a time against values calculated from an array named pw. That name is slightly misleading: the array does not contain the password in plain text."
+            "text": "`main` starts by reading up to `0x400` bytes from stdin into `input`."
           },
           {
             "type": "paragraph",
-            "text": "For each byte, the program XORs the stored value with 0x27 and adds an increment that starts at 2 and grows by 2 after every successful comparison. A mismatch jumps to the failure message. A decoded newline marks the end of the correct password and reaches the success message."
+            "text": "After that, `r14` is initialized to `0` and `r15` to `2`. In the loop, `r14` is the index into the password data and `r15` is a value added to each decoded byte."
+          },
+          {
+            "type": "paragraph",
+            "text": "Each byte from `pw` is XORed with `0x27`, then the current increment is added. The result is compared against the corresponding byte from our input."
+          },
+          {
+            "type": "paragraph",
+            "text": "In simplified form, the check looks like this:"
           },
           {
             "type": "code",
@@ -74,7 +94,7 @@
           },
           {
             "type": "paragraph",
-            "text": "Seeing this in Binary Ninja's high-level view helped me understand the data flow, while the graph and disassembly made the success and failure branches easier to follow."
+            "text": "So there's no need to brute-force anything. The binary already contains everything needed to reconstruct the expected input."
           }
         ]
       },
@@ -84,13 +104,27 @@
         "blocks": [
           {
             "type": "paragraph",
-            "text": "The pw array begins at 0x404028 and contains the following bytes: 4e 49 1d 42 7c 41 7c 33 75 6a 6b 3c 7e 7f cb. Once I understood the transformation, I reproduced it in a short Python script."
+            "text": "`pw` starts at `0x404028`:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "4e 49 1d 42 7c 41 7c 33 75 6a 6b 3c 7e 7f cb"
+          },
+          {
+            "type": "paragraph",
+            "text": "I copied the transformation into a short Python script:"
           },
           {
             "type": "code",
             "language": "python",
             "label": "solve.py",
             "value": "stored_bytes = bytes.fromhex(\n    \"4e 49 1d 42 7c 41 7c 33 75 6a 6b 3c 7e 7f cb\"\n)\n\npassword = bytearray()\nincrement = 2\n\nfor stored_byte in stored_bytes:\n    expected = ((stored_byte ^ 0x27) + increment) & 0xff\n    password.append(expected)\n\n    if expected == 0x0a:\n        break\n\n    increment += 2\n\nprint(bytes(password))"
+          },
+          {
+            "type": "paragraph",
+            "text": "Which gives:"
           },
           {
             "type": "code",
@@ -100,17 +134,43 @@
           },
           {
             "type": "paragraph",
-            "text": "The final byte is a newline, which is supplied by pressing Enter. Entering kr@meri$dab3st therefore follows every successful comparison and prints \"Correct! You won!\""
+            "text": "The final `\\n` is the newline from pressing Enter, so the actual password is:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "kr@meri$dab3st"
+          },
+          {
+            "type": "image",
+            "src": "/posts/what-password-two-ways/screenshot-2-correct.png",
+            "alt": "Terminal showing the recovered password being accepted by the original crackme.",
+            "caption": "",
+            "width": 965,
+            "height": 68
           }
         ]
       },
       {
-        "id": "patching-the-branch",
-        "title": "Patching the branch",
+        "id": "skipping-the-check-instead",
+        "title": "Skipping the check instead",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "Recovering the transformation solves the challenge by finding the expected input. I also tried a second method: changing the program's control flow so it reaches the success block regardless of the input. This bypasses the check, but it does not recover the password."
+            "text": "Recovering the password is one way to solve it. The easier way, if all you care about is reaching the success path, is to patch the conditional branch."
+          },
+          {
+            "type": "image",
+            "src": "/posts/what-password-two-ways/screenshot-3-graph.webp",
+            "alt": "Binary Ninja graph view of main showing the comparison loop and the wrong and right branches.",
+            "caption": "",
+            "width": 2400,
+            "height": 1914
+          },
+          {
+            "type": "paragraph",
+            "text": "The relevant instructions are:"
           },
           {
             "type": "code",
@@ -120,13 +180,21 @@
           },
           {
             "type": "paragraph",
-            "text": "At 0x401199, I replaced the conditional jump to the failure block with an unconditional jump to the success block. Binary Ninja encoded this as a five-byte near jump followed by a NOP, so the patch also covered the following newline comparison."
+            "text": "At `0x401199`, the `jne 0x4011b0` sends execution to the failure path when the bytes don't match."
+          },
+          {
+            "type": "paragraph",
+            "text": "I replaced it with an unconditional jump to the success block at `0x4011d5`:"
           },
           {
             "type": "code",
             "language": "asm",
             "label": "Patched control flow",
             "value": "cmp r12b, r13b\njmp right\nnop"
+          },
+          {
+            "type": "paragraph",
+            "text": "The original conditional jump was only two bytes, while the replacement `jmp` is five, so Binary Ninja overwrote the following bytes as well and padded the remainder with a `nop`."
           },
           {
             "type": "evidence",
@@ -151,30 +219,15 @@
           },
           {
             "type": "paragraph",
-            "text": "With that change, even a one-character input reaches the success message. I only made this patch against the local crackme copy as a learning exercise."
-          }
-        ]
-      },
-      {
-        "id": "what-i-learned",
-        "title": "What I learned",
-        "blocks": [
-          {
-            "type": "paragraph",
-            "text": "This was a small beginner challenge, but it helped me connect several ideas that had previously felt separate."
+            "text": "With that patch in place, the comparison no longer matters. Any input reaches the `Correct! You won!` branch."
           },
           {
-            "type": "list",
-            "items": [
-              "A variable name such as pw does not guarantee that the data is stored in plain text.",
-              "High-level IL is useful for following a transformation, while disassembly is better for checking the exact instructions and patch bytes.",
-              "Reimplementing a check and patching around it answer different questions: one explains the expected input, while the other only bypasses the decision.",
-              "Recording addresses, byte sequences, and hashes makes a write-up easier to verify later."
-            ]
-          },
-          {
-            "type": "paragraph",
-            "text": "My next step is to practise on binaries with fewer symbols and less helpful structure, while keeping the same habit of writing down how each conclusion was reached."
+            "type": "image",
+            "src": "/posts/what-password-two-ways/screenshot-4-finished.png",
+            "alt": "Terminal showing the patched crackme accepting a one-character input.",
+            "caption": "",
+            "width": 959,
+            "height": 67
           }
         ]
       }

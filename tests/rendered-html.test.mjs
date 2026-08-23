@@ -1,12 +1,18 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 const contentPosts = JSON.parse(
   readFileSync(new URL("../content/posts.json", import.meta.url), "utf8"),
 );
+const siteDetails = JSON.parse(
+  readFileSync(new URL("../content/site.json", import.meta.url), "utf8"),
+);
 const publishedPost = contentPosts.find((post) => post.status === "published");
 const draftPost = contentPosts.find((post) => post.status !== "published");
+const portfolioStyles = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+const tocSource = readFileSync(new URL("../app/article-toc.tsx", import.meta.url), "utf8");
+const frameSource = readFileSync(new URL("../app/site-frame.tsx", import.meta.url), "utf8");
 
 const developmentPreviewMeta =
   /<meta(?=[^>]*\bname=["']codex-preview["'])(?=[^>]*\bcontent=["']development["'])[^>]*>/i;
@@ -40,14 +46,14 @@ test("server-renders the Night Reading Room homepage", async () => {
   const html = await response.text();
   assert.doesNotMatch(html, developmentPreviewMeta);
   assert.match(html, /<title>nomi<\/title>/i);
-  assert.match(html, /Night Reading Room/);
-  assert.match(html, /seed 7fdc7752/);
+  assert.doesNotMatch(html, /THESIS:|OWN-WORLD:|seed 7fdc7752/);
   assert.match(html, /I am a beginner documenting what I learn/);
   assert.match(html, /Just a beginner learning stuff\./);
   assert.match(html, /class="[^"]*home-vortex[^"]*"/);
   assert.match(html, /class="home-name"/);
   assert.match(html, /class="home-name-stage"/);
   assert.match(html, /class="[^"]*featured-sheet[^"]*"/);
+  assert.match(html, /href="\/favicon\.svg\?v=2"/);
   assert.match(html, /aria-label="Jump to latest posts"/);
   assert.match(html, /<h2>Latest posts<\/h2>/);
   if (publishedPost) {
@@ -81,9 +87,12 @@ test("server-renders public routes and keeps drafts private", async () => {
   ]);
 
   assert.match(writing, /<h1>Posts<\/h1>/);
+  assert.match(writing, /class="page-arrival"/);
+  assert.match(writing, /href="\/favicon\.svg\?v=2"/);
+  assert.match(about, /href="\/favicon\.svg\?v=2"/);
   assert.doesNotMatch(writing, /Notes from learning reverse engineering/);
-  assert.match(about, /beginner currently learning reverse/);
-  assert.match(about, /Writing reproducible technical notes/);
+  assert.ok(about.includes(siteDetails.aboutLead));
+  for (const topic of siteDetails.learningTopics) assert.ok(about.includes(topic));
 
   for (const post of contentPosts.filter((item) => item.status !== "published")) {
     assert.ok(!writing.includes(post.title));
@@ -92,6 +101,52 @@ test("server-renders public routes and keeps drafts private", async () => {
   if (publishedPost) {
     assert.ok(article.includes(publishedPost.title));
     assert.match(article, /class="[^"]*article-paper[^"]*"/);
+    assert.match(article, /class="inline-code"/);
+    assert.match(article, /class="inline-link"/);
+    assert.match(article, /href="https:\/\/crackmes\.one\/crackme\/6a83e2f205a9e80a90724421"/);
+    assert.match(article, /class="article-image"/);
+    assert.match(article, /class="article-image-media"/);
+    assert.doesNotMatch(article, /class="article-image-link"/);
+    assert.match(article, /href="\/favicon\.svg\?v=2"/);
+    assert.match(article, /On this page/);
     assert.match(article, /Back to posts/);
+  }
+});
+
+test("the desktop article rail remains sticky and tracks the current section", () => {
+  assert.match(portfolioStyles, /\.article-paper\s*\{[\s\S]*?overflow:\s*clip;/);
+  assert.match(portfolioStyles, /\.article-toc\s*\{[\s\S]*?position:\s*sticky;/);
+  assert.match(tocSource, /aria-current=\{activeId === section\.id \? "location"/);
+  assert.match(tocSource, /addEventListener\("scroll", updateActiveSection/);
+});
+
+test("search and route arrivals retain the low-glare interaction treatment", () => {
+  assert.match(portfolioStyles, /\.search-results a:hover,[\s\S]*?\.search-results a\.is-selected\s*\{[\s\S]*?border-inline-start-color:\s*var\(--teal\);[\s\S]*?background:\s*var\(--article-surface-raised\);/);
+  assert.match(portfolioStyles, /\.search-heading button:hover\s*\{[\s\S]*?color:\s*var\(--teal\);/);
+  assert.match(portfolioStyles, /\.page-arrival\s*\{[\s\S]*?animation:\s*page-arrival/);
+  assert.match(frameSource, /<dialog[\s\S]*?aria-modal="true"/);
+});
+
+test("the GitHub Pages build emits every public route and discovery asset", () => {
+  const expectedPaths = [
+    "../dist/client/index.html",
+    "../dist/client/about/index.html",
+    "../dist/client/notes/index.html",
+    "../dist/client/robots.txt",
+    "../dist/client/sitemap.xml",
+    "../dist/client/og.png",
+    ...contentPosts
+      .filter((post) => post.status === "published")
+      .map((post) => `../dist/client/notes/${post.slug}/index.html`),
+  ];
+
+  for (const relativePath of expectedPaths) {
+    assert.ok(existsSync(new URL(relativePath, import.meta.url)), `${relativePath} should exist`);
+  }
+
+  const sitemap = readFileSync(new URL("../dist/client/sitemap.xml", import.meta.url), "utf8");
+  assert.match(sitemap, /https:\/\/moonnomi\.github\.io\/notes\//);
+  for (const post of contentPosts.filter((item) => item.status !== "published")) {
+    assert.doesNotMatch(sitemap, new RegExp(post.slug));
   }
 });

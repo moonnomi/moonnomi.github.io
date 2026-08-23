@@ -1,5 +1,5 @@
 {
-  "name": "site-creator-vinext-starter",
+  "name": "nomi-portfolio",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -9,7 +9,7 @@
     "dev": "vinext dev",
     "studio": "node scripts/studio.mjs",
     "author": "node scripts/author.mjs",
-    "build": "vinext build",
+    "build": "vinext build && node scripts/prepare-pages.mjs",
     "start": "vinext start",
     "test": "npm run build && node --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",

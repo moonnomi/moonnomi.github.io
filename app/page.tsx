@@ -16,9 +16,11 @@ export default function Home() {
             <TypedName name={siteContent.name} />
             <p className="home-role">{siteContent.role}</p>
             <p className="home-introduction">{siteContent.introduction}</p>
-            <div className="profile-links" aria-label="Profile details">
-              <ContentLinks links={siteContent.links} />
-            </div>
+            {siteContent.links.length > 0 && (
+              <div className="profile-links" aria-label="Profile details">
+                <ContentLinks links={siteContent.links} />
+              </div>
+            )}
           </div>
 
           {featured ? (

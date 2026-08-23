@@ -9,6 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
+  const hasLinks = siteContent.links.length > 0;
+
   return (
     <div className="shell about-page">
       <header className="about-header">
@@ -16,7 +18,7 @@ export default function AboutPage() {
         <h1>About</h1>
       </header>
 
-      <div className="about-sheet">
+      <div className={`about-sheet${hasLinks ? "" : " about-sheet--single"}`}>
         <div className="about-copy">
           <p className="about-lead">
             {siteContent.aboutLead}
@@ -29,14 +31,18 @@ export default function AboutPage() {
           </ul>
         </div>
 
-        <aside className="about-details" aria-label="Placeholder contact details">
-          <h2>Contact</h2>
-          <dl>
-            <div><dt>Email</dt><dd><ContentLink linkKey="email" link={siteContent.links.email} /></dd></div>
-            <div><dt>GitHub</dt><dd><ContentLink linkKey="github" link={siteContent.links.github} /></dd></div>
-            <div><dt>Resume</dt><dd><ContentLink linkKey="resume" link={siteContent.links.resume} /></dd></div>
-          </dl>
-        </aside>
+        {hasLinks && (
+          <aside className="about-details" aria-label="Contact details">
+            <h2>Contact</h2>
+            <ul>
+              {siteContent.links.map((link, index) => (
+                <li key={`${link.label}-${link.url}-${index}`}>
+                  <ContentLink link={link} placeholder={link.label.toLowerCase()} />
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )}
       </div>
     </div>
   );
