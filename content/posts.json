@@ -1,186 +1,432 @@
 [
   {
+    "slug": "what-password-two-ways",
+    "title": "Solving what_password two ways",
+    "summary": "My first crackme write-up: tracing a byte-by-byte password check, rebuilding its transformation in Python, and bypassing it with a small control-flow patch.",
+    "date": "2026.08.23",
+    "readingTime": "4 min",
+    "tags": [
+      "crackme",
+      "binary-ninja",
+      "x86-64",
+      "python",
+      "binary-patching"
+    ],
+    "status": "draft",
+    "isSample": false,
+    "sections": [
+      {
+        "id": "starting-point",
+        "title": "Starting point",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "This is a small crackme challenge rather than a real malware sample. Running the program gave me no prompt: it simply waited for input, then printed \"Incorrect password!\" after a wrong guess. Instead of trying to brute-force it, I wanted to understand how the password check worked."
+          },
+          {
+            "type": "paragraph",
+            "text": "I opened the binary in Binary Ninja and started from main. The file was a 64-bit x86 ELF with symbols and debug information still present, which made it a friendly first target."
+          },
+          {
+            "type": "evidence",
+            "items": [
+              [
+                "file",
+                "what_password"
+              ],
+              [
+                "format",
+                "ELF64 / x86-64"
+              ],
+              [
+                "analysis tool",
+                "Binary Ninja"
+              ],
+              [
+                "main",
+                "0x401150"
+              ],
+              [
+                "original SHA-256",
+                "f27ca3167737d987db891fdf33b2fb758db0c9b4240040617f7dc66fa7cccc44"
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "id": "reading-the-password-check",
+        "title": "Reading the password check",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The program first reads up to 0x400 bytes from standard input. It then compares the input one byte at a time against values calculated from an array named pw. That name is slightly misleading: the array does not contain the password in plain text."
+          },
+          {
+            "type": "paragraph",
+            "text": "For each byte, the program XORs the stored value with 0x27 and adds an increment that starts at 2 and grows by 2 after every successful comparison. A mismatch jumps to the failure message. A decoded newline marks the end of the correct password and reaches the success message."
+          },
+          {
+            "type": "code",
+            "language": "c",
+            "label": "Simplified password check",
+            "value": "read(0, input, 0x400);\n\nindex = 0;\nincrement = 2;\n\nwhile (true) {\n    expected = ((pw[index] ^ 0x27) + increment) & 0xff;\n\n    if (expected != input[index])\n        fail();\n\n    if (expected == '\\n')\n        success();\n\n    index++;\n    increment += 2;\n}"
+          },
+          {
+            "type": "paragraph",
+            "text": "Seeing this in Binary Ninja's high-level view helped me understand the data flow, while the graph and disassembly made the success and failure branches easier to follow."
+          }
+        ]
+      },
+      {
+        "id": "recovering-the-password",
+        "title": "Recovering the password",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The pw array begins at 0x404028 and contains the following bytes: 4e 49 1d 42 7c 41 7c 33 75 6a 6b 3c 7e 7f cb. Once I understood the transformation, I reproduced it in a short Python script."
+          },
+          {
+            "type": "code",
+            "language": "python",
+            "label": "solve.py",
+            "value": "stored_bytes = bytes.fromhex(\n    \"4e 49 1d 42 7c 41 7c 33 75 6a 6b 3c 7e 7f cb\"\n)\n\npassword = bytearray()\nincrement = 2\n\nfor stored_byte in stored_bytes:\n    expected = ((stored_byte ^ 0x27) + increment) & 0xff\n    password.append(expected)\n\n    if expected == 0x0a:\n        break\n\n    increment += 2\n\nprint(bytes(password))"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "Output",
+            "value": "b'kr@meri$dab3st\\n'"
+          },
+          {
+            "type": "paragraph",
+            "text": "The final byte is a newline, which is supplied by pressing Enter. Entering kr@meri$dab3st therefore follows every successful comparison and prints \"Correct! You won!\""
+          }
+        ]
+      },
+      {
+        "id": "patching-the-branch",
+        "title": "Patching the branch",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Recovering the transformation solves the challenge by finding the expected input. I also tried a second method: changing the program's control flow so it reaches the success block regardless of the input. This bypasses the check, but it does not recover the password."
+          },
+          {
+            "type": "code",
+            "language": "asm",
+            "label": "Original control flow",
+            "value": "cmp r12b, r13b\njne wrong\ncmp r12b, 0x0a\nje right"
+          },
+          {
+            "type": "paragraph",
+            "text": "At 0x401199, I replaced the conditional jump to the failure block with an unconditional jump to the success block. Binary Ninja encoded this as a five-byte near jump followed by a NOP, so the patch also covered the following newline comparison."
+          },
+          {
+            "type": "code",
+            "language": "asm",
+            "label": "Patched control flow",
+            "value": "cmp r12b, r13b\njmp right\nnop"
+          },
+          {
+            "type": "evidence",
+            "items": [
+              [
+                "patch address",
+                "0x401199"
+              ],
+              [
+                "original bytes",
+                "75 15 41 80 fc 0a"
+              ],
+              [
+                "patched bytes",
+                "e9 37 00 00 00 90"
+              ],
+              [
+                "patched SHA-256",
+                "80dee3bc87b9cd5d04365041ee75be717cd3461c68f909f8cb766a9136941a30"
+              ]
+            ]
+          },
+          {
+            "type": "paragraph",
+            "text": "With that change, even a one-character input reaches the success message. I only made this patch against the local crackme copy as a learning exercise."
+          }
+        ]
+      },
+      {
+        "id": "what-i-learned",
+        "title": "What I learned",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "This was a small beginner challenge, but it helped me connect several ideas that had previously felt separate."
+          },
+          {
+            "type": "list",
+            "items": [
+              "A variable name such as pw does not guarantee that the data is stored in plain text.",
+              "High-level IL is useful for following a transformation, while disassembly is better for checking the exact instructions and patch bytes.",
+              "Reimplementing a check and patching around it answer different questions: one explains the expected input, while the other only bypasses the decision.",
+              "Recording addresses, byte sequences, and hashes makes a write-up easier to verify later."
+            ]
+          },
+          {
+            "type": "paragraph",
+            "text": "My next step is to practise on binaries with fewer symbols and less helpful structure, while keeping the same habit of writing down how each conclusion was reached."
+          }
+        ]
+      }
+    ]
+  },
+  {
     "slug": "staged-loader-static-triage",
     "title": "Unpacking a staged loader without executing it",
     "summary": "A static-first workflow for recovering an embedded payload, validating its boundaries, and documenting the hand-off between stages.",
     "date": "2026.08.17",
-    "readingTime": "8 min",
+    "readingTime": "2 min",
     "tags": [
       "pe",
       "unpacking",
       "static-analysis"
     ],
+    "status": "draft",
+    "isSample": true,
     "sections": [
       {
         "id": "initial-triage",
         "title": "Initial triage",
-        "paragraphs": [
-          "The sample presented as a small PE32 executable with an unusually sparse import table and a high-entropy final section. Rather than stepping into it immediately, I treated the file as a container and mapped every region that could plausibly hold a second stage.",
-          "The objective was not attribution. It was to produce a reproducible account of what the loader stored, how it transformed that data, and where execution would transfer next."
-        ],
-        "evidence": [
-          [
-            "format",
-            "PE32 / x86"
-          ],
-          [
-            "imports",
-            "LoadLibraryA, GetProcAddress, VirtualAlloc"
-          ],
-          [
-            "anomaly",
-            "high-entropy overlay after final section"
-          ],
-          [
-            "working hypothesis",
-            "embedded second-stage payload"
-          ]
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The sample presented as a small PE32 executable with an unusually sparse import table and a high-entropy final section. Rather than stepping into it immediately, I treated the file as a container and mapped every region that could plausibly hold a second stage."
+          },
+          {
+            "type": "paragraph",
+            "text": "The objective was not attribution. It was to produce a reproducible account of what the loader stored, how it transformed that data, and where execution would transfer next."
+          },
+          {
+            "type": "evidence",
+            "items": [
+              [
+                "format",
+                "PE32 / x86"
+              ],
+              [
+                "imports",
+                "LoadLibraryA, GetProcAddress, VirtualAlloc"
+              ],
+              [
+                "anomaly",
+                "high-entropy overlay after final section"
+              ],
+              [
+                "working hypothesis",
+                "embedded second-stage payload"
+              ]
+            ]
+          }
         ]
       },
       {
-        "id": "finding-boundaries",
+        "id": "finding-the-payload-boundaries",
         "title": "Finding the payload boundaries",
-        "paragraphs": [
-          "Cross-references from the entry routine converged on a short loop that read beyond the last mapped section. The loop used a constant-sized key schedule and stopped at a length copied directly from the overlay header.",
-          "That gave three independent boundary checks: the overlay offset, the decoded length field, and the allocation size passed to the eventual memory copy. Agreement between all three made extraction possible without running the loader."
-        ],
-        "bullets": [
-          "Record file offsets and virtual addresses separately.",
-          "Confirm size fields against both the file length and allocation call.",
-          "Hash the original and extracted objects before further transformation."
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Cross-references from the entry routine converged on a short loop that read beyond the last mapped section. The loop used a constant-sized key schedule and stopped at a length copied directly from the overlay header."
+          },
+          {
+            "type": "paragraph",
+            "text": "That gave three independent boundary checks: the overlay offset, the decoded length field, and the allocation size passed to the eventual memory copy. Agreement between all three made extraction possible without running the loader."
+          },
+          {
+            "type": "list",
+            "items": [
+              "Record file offsets and virtual addresses separately.",
+              "Confirm size fields against both the file length and allocation call.",
+              "Hash the original and extracted objects before further transformation."
+            ]
+          }
         ]
       },
       {
         "id": "recovery-script",
         "title": "Recovery script",
-        "paragraphs": [
-          "The decoder was small enough to reproduce in a disposable script. The important part was preserving the transformation exactly and refusing malformed sizes instead of attempting a best-effort decode."
-        ],
-        "code": {
-          "language": "python",
-          "label": "extract_stage.py",
-          "value": "from pathlib import Path\n\nblob = Path(\"sample.bin\").read_bytes()\noffset = 0x6200\nlength = int.from_bytes(blob[offset:offset + 4], \"little\")\nkey = blob[offset + 4:offset + 20]\nciphertext = blob[offset + 20:offset + 20 + length]\n\nif len(ciphertext) != length:\n    raise ValueError(\"truncated stage\")\n\nstage = bytes(value ^ key[index % len(key)]\n              for index, value in enumerate(ciphertext))\nPath(\"stage.recovered.bin\").write_bytes(stage)"
-        }
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The decoder was small enough to reproduce in a disposable script. The important part was preserving the transformation exactly and refusing malformed sizes instead of attempting a best-effort decode."
+          },
+          {
+            "type": "code",
+            "language": "python",
+            "label": "extract_stage.py",
+            "value": "from pathlib import Path\n\nblob = Path(\"sample.bin\").read_bytes()\noffset = 0x6200\nlength = int.from_bytes(blob[offset:offset + 4], \"little\")\nkey = blob[offset + 4:offset + 20]\nciphertext = blob[offset + 20:offset + 20 + length]\n\nif len(ciphertext) != length:\n    raise ValueError(\"truncated stage\")\n\nstage = bytes(value ^ key[index % len(key)]\n              for index, value in enumerate(ciphertext))\nPath(\"stage.recovered.bin\").write_bytes(stage)"
+          }
+        ]
       },
       {
-        "id": "result",
+        "id": "result-and-confidence",
         "title": "Result and confidence",
-        "paragraphs": [
-          "The recovered object began with a valid PE signature and contained the networking imports absent from the loader. Its entry point matched the destination of the final indirect call after relocation. Those facts support the staged-loader hypothesis without requiring live execution.",
-          "A sandbox run would still be useful for observing configuration and command-and-control behavior, but it is no longer needed to explain the first-stage mechanics."
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The recovered object began with a valid PE signature and contained the networking imports absent from the loader. Its entry point matched the destination of the final indirect call after relocation. Those facts support the staged-loader hypothesis without requiring live execution."
+          },
+          {
+            "type": "paragraph",
+            "text": "A sandbox run would still be useful for observing configuration and command-and-control behavior, but it is no longer needed to explain the first-stage mechanics."
+          }
         ]
       }
-    ],
-    "status": "published",
-    "isSample": true
+    ]
   },
   {
     "slug": "opaque-predicate-cfg",
     "title": "Tracing an opaque predicate through a flattened CFG",
     "summary": "How I reduced a noisy dispatcher loop into a small set of meaningful state transitions and rebuilt the function's control flow.",
     "date": "2026.08.04",
-    "readingTime": "11 min",
+    "readingTime": "2 min",
     "tags": [
       "deobfuscation",
       "cfg",
       "x64"
     ],
+    "status": "draft",
+    "isSample": true,
     "sections": [
       {
-        "id": "symptom",
+        "id": "the-symptom",
         "title": "The symptom",
-        "paragraphs": [
-          "The target function contained dozens of basic blocks, but nearly every block returned to the same switch-like dispatcher. Conventional graph view emphasized the noise: repeated compare-and-branch sequences, state writes, and edges that appeared feasible but were never selected.",
-          "I stopped treating the dispatcher as ordinary control flow and instead modeled it as a state machine. Each block became a transition from an incoming state value to one or more outgoing values."
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The target function contained dozens of basic blocks, but nearly every block returned to the same switch-like dispatcher. Conventional graph view emphasized the noise: repeated compare-and-branch sequences, state writes, and edges that appeared feasible but were never selected."
+          },
+          {
+            "type": "paragraph",
+            "text": "I stopped treating the dispatcher as ordinary control flow and instead modeled it as a state machine. Each block became a transition from an incoming state value to one or more outgoing values."
+          }
         ]
       },
       {
-        "id": "predicate",
+        "id": "proving-the-predicate",
         "title": "Proving the predicate",
-        "paragraphs": [
-          "One branch depended on an arithmetic expression over a value already constrained to a byte. Exhaustive evaluation over that domain showed one side was unreachable. A symbolic proof was possible, but a tiny domain table was faster to review and easier to attach to the case notes."
-        ],
-        "code": {
-          "language": "python",
-          "label": "predicate_check.py",
-          "value": "def branch(value: int) -> bool:\n    value &= 0xff\n    return ((value * value + value) & 1) == 1\n\nreachable = [value for value in range(256) if branch(value)]\nassert reachable == []"
-        }
-      },
-      {
-        "id": "reconstruction",
-        "title": "Reconstructing the graph",
-        "bullets": [
-          "Name dispatcher states by behavior, not by their numeric constants.",
-          "Remove transitions guarded by proven-invariant predicates.",
-          "Collapse blocks that only assign the next state.",
-          "Re-run data-flow analysis on the simplified graph."
-        ],
-        "paragraphs": [
-          "After eliminating impossible transitions and collapsing pure state assignments, the apparent maze reduced to a validation routine with four decisions and a single error exit. Renaming around those decisions made the remaining data flow readable without patching the binary."
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "One branch depended on an arithmetic expression over a value already constrained to a byte. Exhaustive evaluation over that domain showed one side was unreachable. A symbolic proof was possible, but a tiny domain table was faster to review and easier to attach to the case notes."
+          },
+          {
+            "type": "code",
+            "language": "python",
+            "label": "predicate_check.py",
+            "value": "def branch(value: int) -> bool:\n    value &= 0xff\n    return ((value * value + value) & 1) == 1\n\nreachable = [value for value in range(256) if branch(value)]\nassert reachable == []"
+          }
         ]
       },
       {
-        "id": "lesson",
+        "id": "reconstructing-the-graph",
+        "title": "Reconstructing the graph",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "After eliminating impossible transitions and collapsing pure state assignments, the apparent maze reduced to a validation routine with four decisions and a single error exit. Renaming around those decisions made the remaining data flow readable without patching the binary."
+          },
+          {
+            "type": "list",
+            "items": [
+              "Name dispatcher states by behavior, not by their numeric constants.",
+              "Remove transitions guarded by proven-invariant predicates.",
+              "Collapse blocks that only assign the next state.",
+              "Re-run data-flow analysis on the simplified graph."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "what-transferred",
         "title": "What transferred",
-        "paragraphs": [
-          "The useful technique was not a particular deobfuscator. It was changing representations: from a hostile control-flow graph to a small transition table. That shift made invariants visible and created a reviewable path from observation to conclusion."
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The useful technique was not a particular deobfuscator. It was changing representations: from a hostile control-flow graph to a small transition table. That shift made invariants visible and created a reviewable path from observation to conclusion."
+          }
         ]
       }
-    ],
-    "status": "published",
-    "isSample": true
+    ]
   },
   {
     "slug": "yara-config-infostealer",
     "title": "Designing a resilient YARA rule around a config decoder",
     "summary": "A detection note focused on stable implementation details instead of family names, packed-byte signatures, or disposable infrastructure.",
     "date": "2026.07.22",
-    "readingTime": "7 min",
+    "readingTime": "2 min",
     "tags": [
       "yara",
       "detection",
       "configuration"
     ],
+    "status": "draft",
+    "isSample": true,
     "sections": [
       {
-        "id": "goal",
+        "id": "detection-goal",
         "title": "Detection goal",
-        "paragraphs": [
-          "The sample family changed packers and network indicators frequently, so a useful rule had to live below those layers. The most stable candidate was its configuration decoder: a short routine that located a marker, decoded length-prefixed fields, and validated the result with a fixed checksum step.",
-          "I treated the rule as a hypothesis about implementation behavior, then assembled a small clean and malicious corpus to measure how well that hypothesis held."
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The sample family changed packers and network indicators frequently, so a useful rule had to live below those layers. The most stable candidate was its configuration decoder: a short routine that located a marker, decoded length-prefixed fields, and validated the result with a fixed checksum step."
+          },
+          {
+            "type": "paragraph",
+            "text": "I treated the rule as a hypothesis about implementation behavior, then assembled a small clean and malicious corpus to measure how well that hypothesis held."
+          }
         ]
       },
       {
-        "id": "rule",
+        "id": "rule-sketch",
         "title": "Rule sketch",
-        "code": {
-          "language": "yara",
-          "label": "config_decoder.yar",
-          "value": "rule Config_Decoder_Structure\n{\n  meta:\n    author = \"[ blank ]\"\n    purpose = \"portfolio example\"\n\n  strings:\n    $marker = { 43 46 47 00 01 ?? ?? 00 }\n    $decode = { 0F B6 ?? ?? 33 ?? 88 ?? ?? 48 FF C? }\n\n  condition:\n    uint16(0) == 0x5A4D and\n    filesize < 2MB and\n    $marker and $decode\n}"
-        },
-        "paragraphs": [
-          "The byte sequences above are illustrative portfolio data rather than a production signature. A real rule would include corpus-backed comments, known-good testing, and a versioned source set."
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The byte sequences above are illustrative portfolio data rather than a production signature. A real rule would include corpus-backed comments, known-good testing, and a versioned source set."
+          },
+          {
+            "type": "code",
+            "language": "yara",
+            "label": "config_decoder.yar",
+            "value": "rule Config_Decoder_Structure\n{\n  meta:\n    author = \"[ blank ]\"\n    purpose = \"portfolio example\"\n\n  strings:\n    $marker = { 43 46 47 00 01 ?? ?? 00 }\n    $decode = { 0F B6 ?? ?? 33 ?? 88 ?? ?? 48 FF C? }\n\n  condition:\n    uint16(0) == 0x5A4D and\n    filesize < 2MB and\n    $marker and $decode\n}"
+          }
         ]
       },
       {
-        "id": "quality",
+        "id": "quality-checks",
         "title": "Quality checks",
-        "bullets": [
-          "Prefer two independent implementation anchors over one long sequence.",
-          "Document which compiler variations were tested.",
-          "Track false positives as first-class case evidence.",
-          "Keep infrastructure indicators outside the core family rule."
+        "blocks": [
+          {
+            "type": "list",
+            "items": [
+              "Prefer two independent implementation anchors over one long sequence.",
+              "Document which compiler variations were tested.",
+              "Track false positives as first-class case evidence.",
+              "Keep infrastructure indicators outside the core family rule."
+            ]
+          }
         ]
       },
       {
         "id": "outcome",
         "title": "Outcome",
-        "paragraphs": [
-          "The final detection survived the alternate packer in the test set because it targeted the unpacked decoder body, while the corpus test exposed one benign collision that led to a tighter marker constraint. The result was smaller, clearer, and easier to maintain than the initial family-wide signature."
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The final detection survived the alternate packer in the test set because it targeted the unpacked decoder body, while the corpus test exposed one benign collision that led to a tighter marker constraint. The result was smaller, clearer, and easier to maintain than the initial family-wide signature."
+          }
         ]
       }
-    ],
-    "status": "published",
-    "isSample": true
+    ]
   }
 ]
