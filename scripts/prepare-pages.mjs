@@ -1,6 +1,7 @@
 import { copyFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { comparePostRecency } from "../shared/post-order.js";
 
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
 const clientRoot = path.join(projectRoot, "dist", "client");
@@ -46,7 +47,7 @@ async function preparePagesOutput() {
   const posts = JSON.parse(await readFile(postsPath, "utf8"));
   const publishedPosts = posts
     .filter((post) => post.status === "published")
-    .sort((left, right) => right.date.localeCompare(left.date));
+    .sort(comparePostRecency);
   const newestDate = publishedPosts[0]?.date;
   const sitemapEntries = [
     xmlEntry(`${siteUrl}/`, newestDate),

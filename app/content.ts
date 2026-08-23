@@ -1,5 +1,6 @@
 import postsData from "../content/posts.json";
 import siteData from "../content/site.json";
+import { comparePostRecency } from "../shared/post-order.js";
 
 export type NoteBlock =
   | { type: "paragraph"; text: string }
@@ -28,6 +29,7 @@ export type LabNote = {
   title: string;
   summary: string;
   date: string;
+  publishedAt?: string;
   readingTime: string;
   tags: string[];
   status: "draft" | "published";
@@ -55,4 +57,4 @@ export const siteContent = siteData as SiteContent;
 export const allNotes = postsData as unknown as LabNote[];
 export const notes = allNotes
   .filter((note) => note.status === "published")
-  .sort((left, right) => right.date.localeCompare(left.date));
+  .sort(comparePostRecency);

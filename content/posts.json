@@ -4,6 +4,7 @@
     "title": "First Post - what_password crackme",
     "summary": "Taking apart a small x86-64 crackme in Binary Ninja, recovering its password with Python, then patching the check so any input works.",
     "date": "2026.08.23",
+    "publishedAt": "2026-08-23T07:58:19.000Z",
     "readingTime": "3 min",
     "tags": [
       "crackme",
@@ -228,6 +229,311 @@
             "caption": "",
             "width": 959,
             "height": 67
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "soulreaper-shell-key-check",
+    "title": "Soulreaper_shell crackme",
+    "summary": "Taking apart a small x86-64 shell crackme in Binary Ninja, recovering REAPER42 with Python, then inverting the branch that enforces the key check.",
+    "date": "2026.08.23",
+    "publishedAt": "2026-08-23T12:43:37.119Z",
+    "readingTime": "5 min",
+    "tags": [
+      "crackme",
+      "binary-ninja",
+      "x86-64",
+      "python",
+      "binary-patching",
+      "reverse-engineering"
+    ],
+    "status": "published",
+    "isSample": false,
+    "sections": [
+      {
+        "id": "initial-look",
+        "title": "Initial look",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Running `soulreaper_shell` normally reveals a small shell with its own prompt."
+          },
+          {
+            "type": "image",
+            "src": "/posts/soulreaper-shell-key-check/screenshot-1.png",
+            "alt": "The soulreaper shell showing its prompt and accepting regular shell commands.",
+            "caption": "",
+            "width": 994,
+            "height": 113
+          },
+          {
+            "type": "paragraph",
+            "text": "You can execute regular commands as if this were a normal shell. Commands such as `mkdir`, `cat`, and `nano` are passed to the system and work as long as they are available in the environment."
+          },
+          {
+            "type": "paragraph",
+            "text": "I didn't find any obvious commands or other attack vectors that could be used to crack the program, so I opened it in Binary Ninja."
+          },
+          {
+            "type": "evidence",
+            "items": [
+              [
+                "file",
+                "soulreaper_shell"
+              ],
+              [
+                "format",
+                "ELF64 / x86-64"
+              ],
+              [
+                "analysis tool",
+                "Binary Ninja"
+              ],
+              [
+                "original crackme",
+                "[View on crackmes.one](https://crackmes.one/crackme/6a77c5d1df981859694944b8)"
+              ],
+              [
+                "main",
+                "around 0x401280"
+              ],
+              [
+                "key validator",
+                "0x401560"
+              ],
+              [
+                "anti-debugging check",
+                "0x401610"
+              ],
+              [
+                "original SHA-256",
+                "a0ca53ad836de59c992a2d3eeff7ac76ad8539eba960c9c3405b2b419e55301e"
+              ],
+              [
+                "patched binary",
+                "soulreaper_shell_cracked"
+              ],
+              [
+                "patched SHA-256",
+                "47cb9aa771aebda7dd9192bfb56f63bcaba81a0c58746c3ffe0e50fe9f4fc93f"
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "id": "looking-at-main",
+        "title": "Looking at `main`",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The decompiled `main` function first calls `sub_401610`. If that function returns a non-zero value, the program prints `Debugger Detected` and stops processing commands. I didn't reverse this function because it isn't needed to recover the key or patch the password check."
+          },
+          {
+            "type": "paragraph",
+            "text": "There are also a few lines involving `fsbase + 0x28`. These are stack-canary checks added by the compiler. The function saves a value from that location when it starts, then compares it again before returning. If the values are different, the program assumes that something overwrote part of the stack and calls `__stack_chk_fail`."
+          },
+          {
+            "type": "paragraph",
+            "text": "That code is protection against stack corruption. It is not part of the key check."
+          },
+          {
+            "type": "paragraph",
+            "text": "After the anti-debugging check, the program repeatedly prints its prompt and reads a line of input. It removes the newline, splits the line into arguments, and looks at the first argument."
+          },
+          {
+            "type": "paragraph",
+            "text": "The relevant logic is roughly:"
+          },
+          {
+            "type": "code",
+            "language": "c",
+            "label": "snippet.c",
+            "value": "command = strtok(input, \" \");\n\nif (strcmp(command, \"exit\") == 0)\n    stop_shell();\n\nif (strcmp(command, \"reap\") != 0) {\n    pid = fork();\n\n    if (pid == 0)\n        execvp(command, arguments);\n    else\n        waitpid(pid, NULL, 0);\n} else if (key == NULL) {\n    puts(\"Usage : reap <key>\");\n} else if (sub_401560(key) == 0) {\n    puts(\"Access denied\");\n} else {\n    puts(\"Access granted\");\n}"
+          },
+          {
+            "type": "paragraph",
+            "text": "So `reap` is a custom command. Its first argument is passed to `sub_401560`, which is the function that checks the key."
+          }
+        ]
+      },
+      {
+        "id": "the-password-check",
+        "title": "The password check",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The important part of `sub_401560` is:"
+          },
+          {
+            "type": "code",
+            "language": "c",
+            "label": "snippet.c",
+            "value": "value = 0x34378e828a78797f;\nresult = 0;\n\nif (strlen(input) == 8) {\n    increment = 7;\n\n    for (index = 0; index < 8; index++) {\n        expected = ((input[index] ^ 0x2a) + increment) & 0xff;\n\n        if (expected != stored[index])\n            return 0;\n\n        increment += 3;\n    }\n\n    return 1;\n}\n\nreturn 0;"
+          },
+          {
+            "type": "paragraph",
+            "text": "The first thing it does is check that the argument is exactly 8 characters long. It then transforms each input byte by XORing it with `0x2a` and adding an increment that starts at `7` and increases by `3` each time."
+          },
+          {
+            "type": "paragraph",
+            "text": "The increments used for the eight characters are:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "7, 10, 13, 16, 19, 22, 25, 28"
+          },
+          {
+            "type": "paragraph",
+            "text": "One confusing part of the Binary Ninja output is that it shows `var_18` as an `int64_t` and `correct` as an `int64_t*`. That makes it look as if the function is comparing 64-bit values, but the logic is actually working with the eight individual bytes stored in that value. When the decompiler's types look strange, the assembly is more reliable than the generated C-like output."
+          },
+          {
+            "type": "paragraph",
+            "text": "Since x86-64 uses little-endian byte order, the bytes of the constant are stored as:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "7f 79 78 8a 82 8e 37 34"
+          },
+          {
+            "type": "paragraph",
+            "text": "The check is:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "((input_byte XOR 0x2a) + increment) == stored_byte"
+          },
+          {
+            "type": "paragraph",
+            "text": "To reverse it, we undo the addition first and then undo the XOR:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "input_byte = (stored_byte - increment) XOR 0x2a"
+          }
+        ]
+      },
+      {
+        "id": "recovering-the-password",
+        "title": "Recovering the password",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "I copied the inverse transformation into a short Python script:"
+          },
+          {
+            "type": "code",
+            "language": "python",
+            "label": "snippet.python",
+            "value": "value = 0x34378e828a78797f\nexpected = value.to_bytes(8, byteorder=\"little\")\n\npassword = bytearray()\nincrement = 7\n\nfor stored_byte in expected:\n    character = ((stored_byte - increment) ^ 0x2a) & 0xff\n    password.append(character)\n    increment += 3\n\nprint(\"Password:\", password.decode())"
+          },
+          {
+            "type": "paragraph",
+            "text": "This gives:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "Password: REAPER42"
+          },
+          {
+            "type": "paragraph",
+            "text": "Using it as the argument to `reap` gives the success message:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "soulreaper shell > reap REAPER42\nAccess granted\njoin us : https://t.me/+blTRfHi8oKJiN2E0"
+          },
+          {
+            "type": "image",
+            "src": "/posts/soulreaper-shell-key-check/screenshot-2.png",
+            "alt": "The soulreaper shell accepting REAPER42 and printing Access granted.",
+            "caption": "",
+            "width": 1022,
+            "height": 132
+          }
+        ]
+      },
+      {
+        "id": "bypassing-the-check-instead",
+        "title": "Bypassing the check instead",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Recovering the password is one way to solve the challenge. Another way is to change the conditional branch that decides whether the validator result is accepted."
+          },
+          {
+            "type": "paragraph",
+            "text": "The relevant assembly in `main` is:"
+          },
+          {
+            "type": "code",
+            "language": "asm",
+            "label": "snippet.asm",
+            "value": "0x401390  call sub_401560\n0x401395  test eax, eax\n0x401397  je   0x4013f8\n\n0x401399  lea  rsi, [rel data_402061]  ; \"Access granted\"\n0x4013a0  mov  edi, 0x2\n0x4013a5  xor  eax, eax\n0x4013a7  call __printf_chk"
+          },
+          {
+            "type": "paragraph",
+            "text": "The return value from `sub_401560` is placed in `eax`. The `test eax, eax` instruction checks whether that value is zero:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "eax = 0  -> zero flag is set -> invalid key\neax = 1  -> zero flag is clear -> valid key"
+          },
+          {
+            "type": "paragraph",
+            "text": "The original `je` means “jump if equal to zero”. Therefore, when the validator returns `0`, execution jumps to the `Access denied` block at `0x4013f8`. When the validator returns `1`, execution falls through to the granted block at `0x401399`."
+          },
+          {
+            "type": "paragraph",
+            "text": "I used Binary Ninja's invert-branch patch on the instruction at `0x401397`, changing `je` to `jne`."
+          },
+          {
+            "type": "paragraph",
+            "text": "The original and patched bytes are:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "address:       0x401397\noriginal:      74 5f       ; je  0x4013f8\npatched:       75 5f       ; jne 0x4013f8"
+          },
+          {
+            "type": "paragraph",
+            "text": "After the patch, an invalid key no longer jumps to the denied block. It falls through to the granted block instead:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "eax = 0  -> jne is not taken -> Access granted\neax = 1  -> jne is taken     -> Access denied"
+          },
+          {
+            "type": "paragraph",
+            "text": "The `reap` command still needs an argument, because the null-argument check happens before the validator is called. However, any key that fails the original check can now reach the success path."
+          },
+          {
+            "type": "image",
+            "src": "/posts/soulreaper-shell-key-check/screenshot-3.png",
+            "alt": "The patched soulreaper shell accepting an invalid key and printing Access granted.",
+            "caption": "",
+            "width": 1105,
+            "height": 139
           }
         ]
       }

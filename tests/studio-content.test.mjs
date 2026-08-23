@@ -7,9 +7,11 @@ import {
   markdownToSections,
   normalizePost,
   normalizeSite,
+  preservePublicationTime,
   sectionsToMarkdown,
   startStudio,
 } from "../scripts/studio.mjs";
+import { comparePostRecency } from "../shared/post-order.js";
 import { restoredEditorState } from "../studio/state-utils.js";
 
 const orderedMarkdown = [
@@ -89,6 +91,49 @@ test("post normalization rejects impossible calendar dates", () => {
     }),
     /real calendar date/i,
   );
+});
+
+test("publication timestamps resolve same-day post ordering", () => {
+  const posts = [
+    {
+      slug: "older-post",
+      date: "2026.08.23",
+      publishedAt: "2026-08-23T07:58:19.000Z",
+    },
+    {
+      slug: "newer-post",
+      date: "2026.08.23",
+      publishedAt: "2026-08-23T12:43:37.119Z",
+    },
+  ];
+
+  posts.sort(comparePostRecency);
+  assert.deepEqual(posts.map((post) => post.slug), ["newer-post", "older-post"]);
+});
+
+test("the studio assigns publication time once and preserves it on edits", () => {
+  const draft = normalizePost({
+    title: "A timed note",
+    slug: "a-timed-note",
+    summary: "A short summary.",
+    date: "2026.08.23",
+    tags: ["learning"],
+    status: "published",
+    body: orderedMarkdown,
+  });
+  const firstPublication = preservePublicationTime(
+    draft,
+    undefined,
+    new Date("2026-08-23T12:43:37.119Z"),
+  );
+  const editedPublication = preservePublicationTime(
+    { ...firstPublication, title: "An edited timed note" },
+    firstPublication,
+    new Date("2026-08-24T00:00:00.000Z"),
+  );
+
+  assert.equal(firstPublication.publishedAt, "2026-08-23T12:43:37.119Z");
+  assert.equal(editedPublication.publishedAt, firstPublication.publishedAt);
 });
 
 test("site normalization accepts ordered custom social links", () => {

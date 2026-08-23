@@ -3,6 +3,7 @@ import { copyFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { comparePostRecency } from "../shared/post-order.js";
 
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
 const studioRoot = path.join(projectRoot, "studio");
@@ -334,6 +335,7 @@ function editorPost(post) {
     title: post.title,
     summary: post.summary,
     date: post.date,
+    publishedAt: post.publishedAt ?? "",
     readingTime: post.readingTime,
     tags: post.tags,
     status: post.status,
@@ -360,6 +362,11 @@ export function normalizePost(value) {
   ) {
     throw new RequestError(400, "Date must be a real calendar date.");
   }
+  const rawPublishedAt = optionalString(value.publishedAt, 40);
+  const parsedPublishedAt = rawPublishedAt ? Date.parse(rawPublishedAt) : NaN;
+  if (rawPublishedAt && !Number.isFinite(parsedPublishedAt)) {
+    throw new RequestError(400, "Publication time must be a valid ISO 8601 timestamp.");
+  }
   const status = value.status === "published" ? "published" : "draft";
   const tags = Array.from(
     new Set(
@@ -376,12 +383,24 @@ export function normalizePost(value) {
     title,
     summary,
     date,
+    ...(rawPublishedAt ? { publishedAt: new Date(parsedPublishedAt).toISOString() } : {}),
     readingTime: Math.max(1, Math.ceil(wordCount / 200)) + " min",
     tags,
     status,
     isSample: Boolean(value.isSample),
     sections: markdownToSections(body),
   };
+}
+
+export function preservePublicationTime(post, existingPost, now = new Date()) {
+  const previousTime = existingPost?.publishedAt || post.publishedAt;
+  if (post.status === "published") {
+    return {
+      ...post,
+      publishedAt: previousTime || now.toISOString(),
+    };
+  }
+  return previousTime ? { ...post, publishedAt: previousTime } : post;
 }
 
 function normalizeLinkUrl(value) {
@@ -638,6 +657,11 @@ export async function startStudio(options = {}) {
         return;
       }
 
+      if (request.method === "GET" && pathname === "/post-order.js") {
+        sendText(response, 200, await readFile(path.join(projectRoot, "shared", "post-order.js"), "utf8"), "text/javascript; charset=utf-8");
+        return;
+      }
+
       if (request.method === "GET" && pathname === "/fonts/public-sans.woff2") {
         sendText(
           response,
@@ -687,7 +711,7 @@ export async function startStudio(options = {}) {
           site,
           posts: posts
             .map(editorPost)
-            .sort((left, right) => right.date.localeCompare(left.date)),
+            .sort(comparePostRecency),
           publicUrl: "http://localhost:3000/",
         });
         return;
@@ -704,7 +728,7 @@ export async function startStudio(options = {}) {
       if (request.method === "POST" && pathname === "/api/posts") {
         requireOrigin(request);
         const body = await readBody(request);
-        const post = normalizePost(body.post ?? body);
+        let post = normalizePost(body.post ?? body);
         const originalSlug = slugify(body.originalSlug ?? "");
         let existingIndex = -1;
         await serializeMutation(async () => {
@@ -712,6 +736,7 @@ export async function startStudio(options = {}) {
           existingIndex = originalSlug
             ? posts.findIndex((item) => item.slug === originalSlug)
             : -1;
+          post = preservePublicationTime(post, posts[existingIndex]);
           const collision = posts.some(
             (item, index) => item.slug === post.slug && index !== existingIndex,
           );
@@ -719,7 +744,7 @@ export async function startStudio(options = {}) {
 
           if (existingIndex >= 0) posts[existingIndex] = post;
           else posts.push(post);
-          posts.sort((left, right) => right.date.localeCompare(left.date));
+          posts.sort(comparePostRecency);
           await writeJson(activePostsPath, "posts", posts, activeBackupRoot);
         });
         sendJson(response, existingIndex >= 0 ? 200 : 201, { post: editorPost(post) });

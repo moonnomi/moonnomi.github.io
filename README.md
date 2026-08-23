@@ -17,6 +17,8 @@ Open the private Studio started by `npm run author`, create a draft, and write t
 
 Posts are stored in `content/posts.json`, with images under `public/posts/<post-slug>/`. Draft posts stay out of public pages, search results, sitemaps, and generated routes.
 
+The Studio records an internal `publishedAt` timestamp the first time a post is published. It uses that timestamp to order posts created on the same day while the public site continues to show only the date.
+
 Inline code and links use familiar Markdown syntax:
 
 ```md

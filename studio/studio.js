@@ -1,4 +1,5 @@
 import { restoredEditorState } from "/state-utils.js";
+import { comparePostRecency } from "/post-order.js";
 
 const byId = (id) => document.getElementById(id);
 const studioState = {
@@ -284,6 +285,7 @@ function createPost() {
     slug: "",
     summary: "",
     date: localDate(),
+    publishedAt: "",
     readingTime: "",
     tags: [],
     status: "draft",
@@ -318,6 +320,7 @@ function readPostForm() {
     slug: byId("post-slug").value,
     summary: byId("post-summary").value,
     date: byId("post-date").value,
+    publishedAt: studioState.activePost?.publishedAt ?? "",
     tags: byId("post-tags").value.split(",").map((tag) => tag.trim()).filter(Boolean),
     status: byId("post-status").value,
     isSample: byId("post-is-sample").checked,
@@ -638,7 +641,7 @@ byId("post-form").addEventListener("submit", async (event) => {
     const index = studioState.posts.findIndex((post) => post.slug === studioState.originalSlug);
     if (index >= 0) studioState.posts[index] = saved;
     else studioState.posts.unshift(saved);
-    studioState.posts.sort((left, right) => right.date.localeCompare(left.date));
+    studioState.posts.sort(comparePostRecency);
     studioState.activePost = structuredClone(saved);
     studioState.savedPostSnapshot = structuredClone(saved);
     studioState.originalSlug = saved.slug;
