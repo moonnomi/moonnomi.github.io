@@ -66,8 +66,4 @@ The instruction `jne 0x4011b0` jumps to the failure branch.
 [Original crackme](https://example.com/challenge)
 ```
 
-## Deploy
-
-Push to `main`, enable **GitHub Actions** as the Pages source in the repository settings, and the included workflow will deploy the site at `https://moonnomi.github.io/`. The guarded Studio button and CLI command perform that normal push; GitHub Actions still owns the build and Pages deployment.
-
 The authoring Studio remains local and is never included in the public site.
