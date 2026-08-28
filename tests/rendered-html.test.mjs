@@ -10,6 +10,7 @@ const siteDetails = JSON.parse(
 );
 const publishedPost = contentPosts.find((post) => post.status === "published");
 const draftPost = contentPosts.find((post) => post.status !== "published");
+const richContentPost = contentPosts.find((post) => post.slug === "what-password-two-ways");
 const portfolioStyles = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
 const tocSource = readFileSync(new URL("../app/article-toc.tsx", import.meta.url), "utf8");
 const frameSource = readFileSync(new URL("../app/site-frame.tsx", import.meta.url), "utf8");
@@ -74,7 +75,7 @@ test("server-renders the Night Reading Room homepage", async () => {
 });
 
 test("server-renders public routes and keeps drafts private", async () => {
-  const articlePost = publishedPost ?? draftPost;
+  const articlePost = richContentPost ?? publishedPost ?? draftPost;
   assert.ok(articlePost, "the content fixture needs at least one post");
 
   const [writingResponse, aboutResponse, articleResponse] = await Promise.all([
@@ -85,7 +86,7 @@ test("server-renders public routes and keeps drafts private", async () => {
 
   assert.equal(writingResponse.status, 200);
   assert.equal(aboutResponse.status, 200);
-  assert.equal(articleResponse.status, publishedPost ? 200 : 404);
+  assert.equal(articleResponse.status, articlePost.status === "published" ? 200 : 404);
 
   const [writing, about, article] = await Promise.all([
     writingResponse.text(),
@@ -105,8 +106,8 @@ test("server-renders public routes and keeps drafts private", async () => {
     assert.ok(!writing.includes(post.title));
   }
 
-  if (publishedPost) {
-    assert.ok(article.includes(publishedPost.title));
+  if (articlePost.status === "published") {
+    assert.ok(article.includes(articlePost.title));
     assert.match(article, /class="[^"]*article-paper[^"]*"/);
     assert.match(article, /class="inline-code"/);
     assert.match(article, /class="inline-link"/);

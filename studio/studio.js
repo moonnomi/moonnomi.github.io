@@ -70,6 +70,7 @@ function showStudio() {
 
 function setDirty(value) {
   studioState.dirty = value;
+  updateLivePublishButton();
 }
 
 function restoreSavedState() {
@@ -240,6 +241,28 @@ function updatePreviewLink() {
   }
 }
 
+function updateLivePublishButton() {
+  const button = byId("deploy-post-button");
+  const hint = byId("live-post-hint");
+  if (!button || !hint) return;
+  const post = studioState.activePost;
+  const available = Boolean(
+    post &&
+    !studioState.isNew &&
+    !studioState.dirty &&
+    post.status === "published" &&
+    post.slug,
+  );
+  button.disabled = !available || studioState.mutating;
+  if (!post || post.status !== "published") {
+    hint.textContent = "Save as Published before publishing live.";
+  } else if (studioState.dirty) {
+    hint.textContent = "Save your changes before publishing live.";
+  } else {
+    hint.textContent = "Runs checks, commits this post, and pushes to GitHub Pages.";
+  }
+}
+
 function renderPostEditor() {
   const post = studioState.activePost;
   byId("post-empty").hidden = Boolean(post);
@@ -264,6 +287,7 @@ function renderPostEditor() {
     ? "Save this draft once before uploading its first image."
     : "Images are stored with this post and inserted at the cursor.";
   updatePreviewLink();
+  updateLivePublishButton();
 }
 
 function selectPost(post, skipConfirmation = false) {
@@ -658,6 +682,42 @@ byId("post-form").addEventListener("submit", async (event) => {
     saveButton.disabled = false;
     saveButton.removeAttribute("aria-busy");
     saveButton.textContent = "Save post";
+  }
+});
+
+byId("deploy-post-button").addEventListener("click", async () => {
+  const post = studioState.activePost;
+  if (!post || studioState.isNew || studioState.dirty || post.status !== "published" || studioState.mutating) {
+    return;
+  }
+  const confirmation = window.prompt(
+    "This will run lint and tests, commit the published post, and push to main.\n\n" +
+    "Type the post slug to continue:\n" + post.slug,
+  );
+  if (confirmation === null) return;
+  if (confirmation !== post.slug) {
+    notify("The slug did not match. Nothing was published.", "error");
+    return;
+  }
+
+  studioState.mutating = true;
+  const button = byId("deploy-post-button");
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  button.textContent = "Publishing…";
+  try {
+    const result = await api("/api/deploy", {
+      method: "POST",
+      body: JSON.stringify({ postSlug: post.slug, confirmation }),
+    });
+    notify(result.message || "Pushed to GitHub. GitHub Pages is deploying.");
+  } catch (error) {
+    handleRequestError(error);
+  } finally {
+    studioState.mutating = false;
+    button.removeAttribute("aria-busy");
+    button.textContent = "Publish live";
+    updateLivePublishButton();
   }
 });
 

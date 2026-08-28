@@ -211,6 +211,8 @@ test("studio markup and behavior retain accessible state contracts", async () =>
   ]);
   assert.match(markup, /aria-current="page"/);
   assert.match(markup, /id="preview-post-hint"/);
+  assert.match(markup, /id="deploy-post-button"/);
+  assert.match(markup, /id="live-post-hint"/);
   assert.match(markup, /id="insert-image-button"/);
   assert.match(markup, /id="add-site-link"/);
   assert.match(markup, /id="site-links"/);
@@ -219,6 +221,8 @@ test("studio markup and behavior retain accessible state contracts", async () =>
   assert.doesNotMatch(markup, /id="preview-post-link"[^>]*href=/);
   assert.match(behavior, /event\.preventDefault\(\);\s*if \(studioState\.mutating\) return;/);
   assert.match(behavior, /\/api\/images/);
+  assert.match(behavior, /\/api\/deploy/);
+  assert.match(behavior, /Type the post slug to continue/);
   assert.match(behavior, /window\.createImageBitmap\(file\)/);
   assert.match(behavior, /bitmap\.close\(\)/);
   assert.match(behavior, /data-link-action/);
@@ -396,9 +400,103 @@ test("serialized post writes reject duplicate concurrent submissions", async () 
     });
     const responses = await Promise.all([submit(), submit()]);
     assert.deepEqual(responses.map((response) => response.status).sort(), [201, 409]);
-    const stored = JSON.parse(await readFile(testPostsPath, "utf8"));
+    const stored = JSON.parse(await readFile(path.join(temporaryRoot, "drafts.json"), "utf8"));
     assert.equal(stored.length, 1);
     assert.equal(stored[0].status, "draft");
+  } finally {
+    if (server) await new Promise((resolve) => server.close(resolve));
+    await rm(temporaryRoot, { recursive: true, force: true });
+  }
+});
+
+test("published and draft posts are stored separately", async () => {
+  const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "nomi-draft-storage-test-"));
+  const testContentRoot = path.join(temporaryRoot, "content");
+  const testBackupRoot = path.join(temporaryRoot, "backups");
+  const testPostsPath = path.join(testContentRoot, "posts.json");
+  const testSitePath = path.join(testContentRoot, "site.json");
+  const testDraftsPath = path.join(temporaryRoot, "drafts.json");
+  const port = 31875;
+  let server;
+
+  try {
+    await mkdir(testContentRoot, { recursive: true });
+    await writeFile(testPostsPath, JSON.stringify([
+      { slug: "public-post", title: "Public", status: "published" },
+      { slug: "private-draft", title: "Draft", status: "draft" },
+    ]) + "\n", "utf8");
+    await writeFile(testSitePath, JSON.stringify({ name: "nomi" }) + "\n", "utf8");
+    server = await startStudio({
+      port,
+      password: "test-password",
+      postsPath: testPostsPath,
+      sitePath: testSitePath,
+      draftsPath: testDraftsPath,
+      backupRoot: testBackupRoot,
+    });
+
+    const publicPosts = JSON.parse(await readFile(testPostsPath, "utf8"));
+    const drafts = JSON.parse(await readFile(testDraftsPath, "utf8"));
+    assert.deepEqual(publicPosts.map((post) => post.slug), ["public-post"]);
+    assert.deepEqual(drafts.map((post) => post.slug), ["private-draft"]);
+  } finally {
+    if (server) await new Promise((resolve) => server.close(resolve));
+    await rm(temporaryRoot, { recursive: true, force: true });
+  }
+});
+
+test("live publishing requires an authenticated exact-slug confirmation", async () => {
+  const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "nomi-live-publish-test-"));
+  const testContentRoot = path.join(temporaryRoot, "content");
+  const testBackupRoot = path.join(temporaryRoot, "backups");
+  const testPostsPath = path.join(testContentRoot, "posts.json");
+  const testSitePath = path.join(testContentRoot, "site.json");
+  const port = 31876;
+  let server;
+  const calls = [];
+
+  try {
+    await mkdir(testContentRoot, { recursive: true });
+    await writeFile(testPostsPath, JSON.stringify([
+      { slug: "ready-post", title: "Ready", status: "published" },
+    ]) + "\n", "utf8");
+    await writeFile(testSitePath, JSON.stringify({ name: "nomi" }) + "\n", "utf8");
+    server = await startStudio({
+      port,
+      password: "test-password",
+      postsPath: testPostsPath,
+      sitePath: testSitePath,
+      backupRoot: testBackupRoot,
+      publishLive: async (options) => {
+        calls.push(options);
+        return { message: "queued", actionsUrl: "https://github.com/example/actions" };
+      },
+    });
+
+    const origin = `http://127.0.0.1:${port}`;
+    const login = await fetch(origin + "/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: origin },
+      body: JSON.stringify({ password: "test-password" }),
+    });
+    const cookie = login.headers.get("set-cookie").split(";", 1)[0];
+    const publish = (confirmation) => fetch(origin + "/api/deploy", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookie,
+        Origin: origin,
+      },
+      body: JSON.stringify({ postSlug: "ready-post", confirmation }),
+    });
+
+    assert.equal((await publish("wrong-post")).status, 400);
+    const response = await publish("ready-post");
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).message, "queued");
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].slug, "ready-post");
+    assert.equal(calls[0].confirmed, true);
   } finally {
     if (server) await new Promise((resolve) => server.close(resolve));
     await rm(temporaryRoot, { recursive: true, force: true });

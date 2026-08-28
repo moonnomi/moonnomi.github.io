@@ -1,17 +1,18 @@
 [
   {
-    "slug": "what-password-two-ways",
-    "title": "First Post - what_password crackme",
-    "summary": "Taking apart a small x86-64 crackme in Binary Ninja, recovering its password with Python, then patching the check so any input works.",
-    "date": "2026.08.23",
-    "publishedAt": "2026-08-23T07:58:19.000Z",
-    "readingTime": "3 min",
+    "slug": "orrery-five-planet-serial",
+    "title": "Reverse engineering Orrery: solving the five-planet serial",
+    "summary": "Working through Orrery's hidden 8x8 planet grid, probe physics, custom serial format, and an AI-assisted solver that turns the survey into a valid serial.",
+    "date": "2026.08.28",
+    "publishedAt": "2026-08-28T10:28:53.808Z",
+    "readingTime": "7 min",
     "tags": [
       "crackme",
       "binary-ninja",
-      "x86-64",
+      "reverse-engineering",
       "python",
-      "binary-patching"
+      "keygen",
+      "ai-assisted"
     ],
     "status": "published",
     "isSample": false,
@@ -22,213 +23,390 @@
         "blocks": [
           {
             "type": "paragraph",
-            "text": "Running `what_password` doesn't print a prompt. It just waits for input, then prints `Incorrect password!` if the guess is wrong."
-          },
-          {
-            "type": "image",
-            "src": "/posts/what-password-two-ways/screenshot-1-first.png",
-            "alt": "Terminal showing the what_password crackme rejecting several incorrect password guesses.",
-            "caption": "",
-            "width": 881,
-            "height": 137
+            "text": "Running `orrery.exe` without arguments prints a telescope survey instead of asking for a serial immediately."
           },
           {
             "type": "paragraph",
-            "text": "I opened the binary in Binary Ninja and jumped to `main`. It's a 64-bit x86 ELF, and the symbols haven't been stripped, so there isn't much hunting around to do."
+            "text": "I used `ORRERY_DAY` to keep the challenge on a fixed day while solving it:"
+          },
+          {
+            "type": "code",
+            "language": "powershell",
+            "label": "snippet.powershell",
+            "value": "$env:ORRERY_DAY = \"22501\"\n.\\orrery.exe"
+          },
+          {
+            "type": "paragraph",
+            "text": "The program prints 32 probe results. Each probe can be absorbed, reflected, or deflected to another edge coordinate."
+          },
+          {
+            "type": "paragraph",
+            "text": "A quick note before getting into it: this write-up was AI-assisted. I used AI to help translate the harder parts of the Binary Ninja decompilation, check my understanding of the probe simulation, and verify the solver. I still stepped through the binary and tested the final serial myself."
           },
           {
             "type": "evidence",
             "items": [
               [
                 "file",
-                "what_password"
+                "orrery.exe"
               ],
               [
                 "format",
-                "ELF64 / x86-64"
+                "PE32+ / x86-64"
               ],
               [
                 "analysis tool",
                 "Binary Ninja"
               ],
               [
-                "original crackme",
-                "[View on crackmes.one](https://crackmes.one/crackme/6a83e2f205a9e80a90724421)"
+                "original SHA-256",
+                "B98A16BC879F602672C7B7C5A64E0AA4A4C9824BC9D1DFFBE6BEE0C95AC669AD"
               ],
               [
                 "main",
-                "0x401150"
+                "0x140002b60"
               ],
               [
-                "original SHA-256",
-                "f27ca3167737d987db891fdf33b2fb758db0c9b4240040617f7dc66fa7cccc44"
+                "survey table",
+                "0x1400051a0"
+              ],
+              [
+                "file offset",
+                "0x29a0"
+              ],
+              [
+                "original crackme",
+                "[View on crackmes.one](https://crackmes.one/crackme/6a89cff9cab6678aefe9da94)"
               ]
             ]
+          },
+          {
+            "type": "paragraph",
+            "text": "The challenge description says that five planets are hidden somewhere inside an 8x8 grid. The program does not store the planet positions directly. Instead, it stores the results that probes would produce."
+          },
+          {
+            "type": "paragraph",
+            "text": "The probes are ordered like this:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "top edge:       (1,0) through (8,0)\nleft/right:     (0,1), (9,1), (0,2), (9,2), ...\nbottom edge:    (1,9) through (8,9)"
           }
         ]
       },
       {
-        "id": "the-password-check",
-        "title": "The password check",
+        "id": "understanding-the-grid",
+        "title": "Understanding the grid",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "`main` starts by reading up to `0x400` bytes from stdin into `input`."
+            "text": "The program uses a 10x10 grid. The outside border is made up of coordinates 0 and 9, while the planets can only be placed between them."
           },
           {
             "type": "paragraph",
-            "text": "After that, `r14` is initialized to `0` and `r15` to `2`. In the loop, `r14` is the index into the password data and `r15` is a value added to each decoded byte."
+            "text": "A ray starts on the border and moves into the grid."
           },
           {
             "type": "paragraph",
-            "text": "Each byte from `pw` is XORed with `0x27`, then the current increment is added. The result is compared against the corresponding byte from our input."
+            "text": "The important rules are:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "if the next cell contains a planet:\n    absorbed\n\nif both diagonal cells contain planets:\n    reflected\n\nif the ray is currently on the border and either diagonal contains a planet:\n    reflected\n\nif only the first diagonal contains a planet:\n    deflect one direction\n\nif only the second diagonal contains a planet:\n    deflect the other direction\n\notherwise:\n    continue forwards"
           },
           {
             "type": "paragraph",
-            "text": "In simplified form, the check looks like this:"
+            "text": "The program stores the result as a number:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "absorbed  = 0\nreflected = 1\ndeflected = 2 + x + (10 * y)"
+          },
+          {
+            "type": "paragraph",
+            "text": "For example, a ray that exits through (6,9) is stored as:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "2 + 6 + (10 * 9) = 98"
+          }
+        ]
+      },
+      {
+        "id": "parsing-the-serial",
+        "title": "Parsing the serial",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The serial is exactly eight characters long. It uses this custom alphabet:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+          },
+          {
+            "type": "paragraph",
+            "text": "The program uses `strchr` to find each serial character inside that alphabet. The difference between the returned pointer and the start of the alphabet gives the character's numeric value."
+          },
+          {
+            "type": "paragraph",
+            "text": "Each character contributes five bits:"
           },
           {
             "type": "code",
             "language": "c",
-            "label": "Simplified password check",
-            "value": "read(0, input, 0x400);\n\nindex = 0;\nincrement = 2;\n\nwhile (true) {\n    expected = ((pw[index] ^ 0x27) + increment) & 0xff;\n\n    if (expected != input[index])\n        fail();\n\n    if (expected == '\\n')\n        success();\n\n    index++;\n    increment += 2;\n}"
+            "label": "snippet.c",
+            "value": "packed = (packed << 5) | character_index;"
           },
           {
             "type": "paragraph",
-            "text": "So there's no need to brute-force anything. The binary already contains everything needed to reconstruct the expected input."
+            "text": "Eight characters give us 40 bits in total."
+          },
+          {
+            "type": "paragraph",
+            "text": "The lowest 10 bits are a checksum. The remaining 30 bits contain the actual data:"
+          },
+          {
+            "type": "code",
+            "language": "c",
+            "label": "snippet.c",
+            "value": "checksum = packed & 0x3ff;\npayload = packed >> 10;"
+          },
+          {
+            "type": "paragraph",
+            "text": "The checksum uses FNV-1a:"
+          },
+          {
+            "type": "code",
+            "language": "c",
+            "label": "snippet.c",
+            "value": "hash = 0x811c9dc5;\n\nfor each byte in the payload:\n    hash = (hash ^ byte) * 0x01000193;"
+          },
+          {
+            "type": "paragraph",
+            "text": "Only the lowest 10 bits of the resulting hash are compared with the checksum from the serial."
           }
         ]
       },
       {
-        "id": "recovering-the-password",
-        "title": "Recovering the password",
+        "id": "recovering-the-planet-positions",
+        "title": "Recovering the planet positions",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "`pw` starts at `0x404028`:"
+            "text": "The name is also involved in the serial."
+          },
+          {
+            "type": "paragraph",
+            "text": "The program first trims whitespace and converts the name to uppercase. It then hashes the name with FNV-1a and keeps the lowest 30 bits:"
+          },
+          {
+            "type": "code",
+            "language": "c",
+            "label": "snippet.c",
+            "value": "name_hash = fnv1a(uppercase_name) & 0x3fffffff;"
+          },
+          {
+            "type": "paragraph",
+            "text": "The payload is combined with this name hash:"
+          },
+          {
+            "type": "code",
+            "language": "c",
+            "label": "snippet.c",
+            "value": "planet_data = payload ^ name_hash;"
+          },
+          {
+            "type": "paragraph",
+            "text": "This gives five six-bit values. Each value represents one position in the 8x8 interior grid:"
+          },
+          {
+            "type": "code",
+            "language": "c",
+            "label": "snippet.c",
+            "value": "x = (value & 7) + 1;\ny = (value >> 3) + 1;"
+          },
+          {
+            "type": "paragraph",
+            "text": "For the layout I found, the five values were:"
           },
           {
             "type": "code",
             "language": "text",
             "label": "snippet.txt",
-            "value": "4e 49 1d 42 7c 41 7c 33 75 6a 6b 3c 7e 7f cb"
+            "value": "0, 1, 2, 3, 10"
           },
           {
             "type": "paragraph",
-            "text": "I copied the transformation into a short Python script:"
+            "text": "Those values correspond to:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "value 0  -> (1,1)\nvalue 1  -> (2,1)\nvalue 2  -> (3,1)\nvalue 3  -> (4,1)\nvalue 10 -> (3,2)"
+          },
+          {
+            "type": "paragraph",
+            "text": "So the planets are located at:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "(1,1), (2,1), (3,1), (4,1), (3,2)"
+          }
+        ]
+      },
+      {
+        "id": "brute-forcing-the-survey",
+        "title": "Brute-forcing the survey",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "There are only 64 possible interior cells, and the challenge uses five planets:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "C(64, 5) = 7,624,512 layouts"
+          },
+          {
+            "type": "paragraph",
+            "text": "That is large enough that doing it manually would be annoying, but small enough to brute-force with a script."
+          },
+          {
+            "type": "paragraph",
+            "text": "I copied the probe behaviour into Python and compared every possible layout against the survey table:"
           },
           {
             "type": "code",
             "language": "python",
-            "label": "solve.py",
-            "value": "stored_bytes = bytes.fromhex(\n    \"4e 49 1d 42 7c 41 7c 33 75 6a 6b 3c 7e 7f cb\"\n)\n\npassword = bytearray()\nincrement = 2\n\nfor stored_byte in stored_bytes:\n    expected = ((stored_byte ^ 0x27) + increment) & 0xff\n    password.append(expected)\n\n    if expected == 0x0a:\n        break\n\n    increment += 2\n\nprint(bytes(password))"
+            "label": "keygen.py",
+            "value": "from itertools import combinations\n\nTABLE_OFFSET = 0x29a0\nDAY_ZERO = 0x50ce\nDAY = 22501\n\n\ndef occupied(planets, x, y):\n    return 1 <= x <= 8 and 1 <= y <= 8 and (x, y) in planets\n\n\ndef trace(planets, x, y, dx, dy):\n    while True:\n        fx = x + dx\n        fy = y + dy\n\n        if occupied(planets, fx, fy):\n            return 0\n\n        a = occupied(planets, fx + dy, fy + dx)\n        b = occupied(planets, fx - dy, fy - dx)\n\n        if a and b:\n            return 1\n\n        if (x in (0, 9) or y in (0, 9)) and (a or b):\n            return 1\n\n        if a:\n            x, y = x - dy, y - dx\n            dx, dy = -dy, -dx\n        elif b:\n            x, y = x + dy, y + dx\n            dx, dy = dy, dx\n        else:\n            x, y = fx, fy\n\n        if x in (0, 9) or y in (0, 9):\n            return 2 + x + (10 * y)\n\n\ndef survey(planets):\n    result = []\n\n    for x in range(1, 9):\n        result.append(trace(planets, x, 0, 0, 1))\n\n    for y in range(1, 9):\n        result.append(trace(planets, 0, y, 1, 0))\n        result.append(trace(planets, 9, y, -1, 0))\n\n    for x in range(1, 9):\n        result.append(trace(planets, x, 9, 0, -1))\n\n    return bytes(result)\n\n\nwith open(\"orrery.exe\", \"rb\") as file:\n    file.seek(TABLE_OFFSET + (DAY - DAY_ZERO) * 32)\n    expected = file.read(32)\n\n\nfor values in combinations(range(64), 5):\n    planets = {\n        ((value & 7) + 1, (value >> 3) + 1)\n        for value in values\n    }\n\n    if survey(planets) == expected:\n        print(\"Found layout:\", values)\n        print(\"Coordinates:\", planets)\n        break"
           },
           {
             "type": "paragraph",
-            "text": "Which gives:"
-          },
-          {
-            "type": "code",
-            "language": "text",
-            "label": "Output",
-            "value": "b'kr@meri$dab3st\\n'"
-          },
-          {
-            "type": "paragraph",
-            "text": "The final `\\n` is the newline from pressing Enter, so the actual password is:"
+            "text": "The matching layout was:"
           },
           {
             "type": "code",
             "language": "text",
             "label": "snippet.txt",
-            "value": "kr@meri$dab3st"
-          },
-          {
-            "type": "image",
-            "src": "/posts/what-password-two-ways/screenshot-2-correct.png",
-            "alt": "Terminal showing the recovered password being accepted by the original crackme.",
-            "caption": "",
-            "width": 965,
-            "height": 68
+            "value": "0, 1, 2, 3, 10"
           }
         ]
       },
       {
-        "id": "skipping-the-check-instead",
-        "title": "Skipping the check instead",
+        "id": "generating-the-serial",
+        "title": "Generating the serial",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "Recovering the password is one way to solve it. The easier way, if all you care about is reaching the success path, is to patch the conditional branch."
-          },
-          {
-            "type": "image",
-            "src": "/posts/what-password-two-ways/screenshot-3-graph.webp",
-            "alt": "Binary Ninja graph view of main showing the comparison loop and the wrong and right branches.",
-            "caption": "",
-            "width": 2400,
-            "height": 1914
+            "text": "After finding the layout, I generated a serial for the name `TEST`."
           },
           {
             "type": "paragraph",
-            "text": "The relevant instructions are:"
+            "text": "For this name:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "name hash  = 0x32d739e5\nplanet data = 0x000420ca\npayload     = 0x32d3192f\nchecksum    = 0x0b0"
+          },
+          {
+            "type": "paragraph",
+            "text": "Packing the payload and checksum together produces:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "0xcb4c64bcb0"
+          },
+          {
+            "type": "paragraph",
+            "text": "Converting that value through the custom alphabet gives:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "SD669F5G"
+          },
+          {
+            "type": "paragraph",
+            "text": "Running it against the original binary:"
+          },
+          {
+            "type": "code",
+            "language": "powershell",
+            "label": "snippet.powershell",
+            "value": "$env:ORRERY_DAY = \"22501\"\n.\\orrery.exe TEST SD669F5G"
+          },
+          {
+            "type": "paragraph",
+            "text": "produces:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "system charted - ORRERY{8ADB122E}"
+          },
+          {
+            "type": "paragraph",
+            "text": "The final fingerprint is also calculated with FNV-1a. It uses the five sorted planet values followed by the four little-endian bytes of the name hash:"
+          },
+          {
+            "type": "code",
+            "language": "python",
+            "label": "snippet.python",
+            "value": "fingerprint_input = bytes([0, 1, 2, 3, 10])\nfingerprint_input += (0x32d739e5).to_bytes(4, \"little\")"
+          },
+          {
+            "type": "paragraph",
+            "text": "This is why the name matters. Changing the name changes both the serial and the final fingerprint."
+          }
+        ]
+      },
+      {
+        "id": "the-tempting-branch-patch",
+        "title": "The tempting branch patch",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "The final survey comparison happens here:"
           },
           {
             "type": "code",
             "language": "asm",
-            "label": "Original control flow",
-            "value": "cmp r12b, r13b\njne wrong\ncmp r12b, 0x0a\nje right"
+            "label": "snippet.asm",
+            "value": "0x1400030ac    call    memcmp\n0x1400030b1    test    eax, eax\n0x1400030b5    jne     0x140003169"
           },
           {
             "type": "paragraph",
-            "text": "At `0x401199`, the `jne 0x4011b0` sends execution to the failure path when the bytes don't match."
+            "text": "memcmp returns zero when the simulated probe results match the table. The `jne` branch goes to the failure message when the result is not zero."
           },
           {
             "type": "paragraph",
-            "text": "I replaced it with an unconditional jump to the success block at `0x4011d5`:"
-          },
-          {
-            "type": "code",
-            "language": "asm",
-            "label": "Patched control flow",
-            "value": "cmp r12b, r13b\njmp right\nnop"
+            "text": "It would be possible to patch this branch and force execution into the fingerprint code. However, the program still calculates the final value from the decoded planet data and the name hash afterwards."
           },
           {
             "type": "paragraph",
-            "text": "The original conditional jump was only two bytes, while the replacement `jmp` is five, so Binary Ninja overwrote the following bytes as well and padded the remainder with a `nop`."
-          },
-          {
-            "type": "evidence",
-            "items": [
-              [
-                "patch address",
-                "0x401199"
-              ],
-              [
-                "original bytes",
-                "75 15 41 80 fc 0a"
-              ],
-              [
-                "patched bytes",
-                "e9 37 00 00 00 90"
-              ],
-              [
-                "patched SHA-256",
-                "80dee3bc87b9cd5d04365041ee75be717cd3461c68f909f8cb766a9136941a30"
-              ]
-            ]
-          },
-          {
-            "type": "paragraph",
-            "text": "With that patch in place, the comparison no longer matters. Any input reaches the `Correct! You won!` branch."
-          },
-          {
-            "type": "image",
-            "src": "/posts/what-password-two-ways/screenshot-4-finished.png",
-            "alt": "Terminal showing the patched crackme accepting a one-character input.",
-            "caption": "",
-            "width": 959,
-            "height": 67
+            "text": "So skipping the comparison does not produce a proper solution. The useful approach here is writing a small keygen that reconstructs the planets from the survey and then creates a valid serial for the chosen name."
           }
         ]
       }
@@ -540,249 +718,235 @@
     ]
   },
   {
-    "slug": "staged-loader-static-triage",
-    "title": "Unpacking a staged loader without executing it",
-    "summary": "A static-first workflow for recovering an embedded payload, validating its boundaries, and documenting the hand-off between stages.",
-    "date": "2026.08.17",
-    "readingTime": "2 min",
+    "slug": "what-password-two-ways",
+    "title": "First Post - what_password crackme",
+    "summary": "Taking apart a small x86-64 crackme in Binary Ninja, recovering its password with Python, then patching the check so any input works.",
+    "date": "2026.08.23",
+    "publishedAt": "2026-08-23T07:58:19.000Z",
+    "readingTime": "3 min",
     "tags": [
-      "pe",
-      "unpacking",
-      "static-analysis"
+      "crackme",
+      "binary-ninja",
+      "x86-64",
+      "python",
+      "binary-patching"
     ],
-    "status": "draft",
-    "isSample": true,
+    "status": "published",
+    "isSample": false,
     "sections": [
       {
-        "id": "initial-triage",
-        "title": "Initial triage",
+        "id": "initial-look",
+        "title": "Initial look",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "The sample presented as a small PE32 executable with an unusually sparse import table and a high-entropy final section. Rather than stepping into it immediately, I treated the file as a container and mapped every region that could plausibly hold a second stage."
+            "text": "Running `what_password` doesn't print a prompt. It just waits for input, then prints `Incorrect password!` if the guess is wrong."
+          },
+          {
+            "type": "image",
+            "src": "/posts/what-password-two-ways/screenshot-1-first.png",
+            "alt": "Terminal showing the what_password crackme rejecting several incorrect password guesses.",
+            "caption": "",
+            "width": 881,
+            "height": 137
           },
           {
             "type": "paragraph",
-            "text": "The objective was not attribution. It was to produce a reproducible account of what the loader stored, how it transformed that data, and where execution would transfer next."
+            "text": "I opened the binary in Binary Ninja and jumped to `main`. It's a 64-bit x86 ELF, and the symbols haven't been stripped, so there isn't much hunting around to do."
           },
           {
             "type": "evidence",
             "items": [
               [
+                "file",
+                "what_password"
+              ],
+              [
                 "format",
-                "PE32 / x86"
+                "ELF64 / x86-64"
               ],
               [
-                "imports",
-                "LoadLibraryA, GetProcAddress, VirtualAlloc"
+                "analysis tool",
+                "Binary Ninja"
               ],
               [
-                "anomaly",
-                "high-entropy overlay after final section"
+                "original crackme",
+                "[View on crackmes.one](https://crackmes.one/crackme/6a83e2f205a9e80a90724421)"
               ],
               [
-                "working hypothesis",
-                "embedded second-stage payload"
+                "main",
+                "0x401150"
+              ],
+              [
+                "original SHA-256",
+                "f27ca3167737d987db891fdf33b2fb758db0c9b4240040617f7dc66fa7cccc44"
               ]
             ]
           }
         ]
       },
       {
-        "id": "finding-the-payload-boundaries",
-        "title": "Finding the payload boundaries",
+        "id": "the-password-check",
+        "title": "The password check",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "Cross-references from the entry routine converged on a short loop that read beyond the last mapped section. The loop used a constant-sized key schedule and stopped at a length copied directly from the overlay header."
+            "text": "`main` starts by reading up to `0x400` bytes from stdin into `input`."
           },
           {
             "type": "paragraph",
-            "text": "That gave three independent boundary checks: the overlay offset, the decoded length field, and the allocation size passed to the eventual memory copy. Agreement between all three made extraction possible without running the loader."
+            "text": "After that, `r14` is initialized to `0` and `r15` to `2`. In the loop, `r14` is the index into the password data and `r15` is a value added to each decoded byte."
           },
           {
-            "type": "list",
-            "items": [
-              "Record file offsets and virtual addresses separately.",
-              "Confirm size fields against both the file length and allocation call.",
-              "Hash the original and extracted objects before further transformation."
-            ]
+            "type": "paragraph",
+            "text": "Each byte from `pw` is XORed with `0x27`, then the current increment is added. The result is compared against the corresponding byte from our input."
+          },
+          {
+            "type": "paragraph",
+            "text": "In simplified form, the check looks like this:"
+          },
+          {
+            "type": "code",
+            "language": "c",
+            "label": "Simplified password check",
+            "value": "read(0, input, 0x400);\n\nindex = 0;\nincrement = 2;\n\nwhile (true) {\n    expected = ((pw[index] ^ 0x27) + increment) & 0xff;\n\n    if (expected != input[index])\n        fail();\n\n    if (expected == '\\n')\n        success();\n\n    index++;\n    increment += 2;\n}"
+          },
+          {
+            "type": "paragraph",
+            "text": "So there's no need to brute-force anything. The binary already contains everything needed to reconstruct the expected input."
           }
         ]
       },
       {
-        "id": "recovery-script",
-        "title": "Recovery script",
+        "id": "recovering-the-password",
+        "title": "Recovering the password",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "The decoder was small enough to reproduce in a disposable script. The important part was preserving the transformation exactly and refusing malformed sizes instead of attempting a best-effort decode."
+            "text": "`pw` starts at `0x404028`:"
+          },
+          {
+            "type": "code",
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "4e 49 1d 42 7c 41 7c 33 75 6a 6b 3c 7e 7f cb"
+          },
+          {
+            "type": "paragraph",
+            "text": "I copied the transformation into a short Python script:"
           },
           {
             "type": "code",
             "language": "python",
-            "label": "extract_stage.py",
-            "value": "from pathlib import Path\n\nblob = Path(\"sample.bin\").read_bytes()\noffset = 0x6200\nlength = int.from_bytes(blob[offset:offset + 4], \"little\")\nkey = blob[offset + 4:offset + 20]\nciphertext = blob[offset + 20:offset + 20 + length]\n\nif len(ciphertext) != length:\n    raise ValueError(\"truncated stage\")\n\nstage = bytes(value ^ key[index % len(key)]\n              for index, value in enumerate(ciphertext))\nPath(\"stage.recovered.bin\").write_bytes(stage)"
-          }
-        ]
-      },
-      {
-        "id": "result-and-confidence",
-        "title": "Result and confidence",
-        "blocks": [
-          {
-            "type": "paragraph",
-            "text": "The recovered object began with a valid PE signature and contained the networking imports absent from the loader. Its entry point matched the destination of the final indirect call after relocation. Those facts support the staged-loader hypothesis without requiring live execution."
+            "label": "solve.py",
+            "value": "stored_bytes = bytes.fromhex(\n    \"4e 49 1d 42 7c 41 7c 33 75 6a 6b 3c 7e 7f cb\"\n)\n\npassword = bytearray()\nincrement = 2\n\nfor stored_byte in stored_bytes:\n    expected = ((stored_byte ^ 0x27) + increment) & 0xff\n    password.append(expected)\n\n    if expected == 0x0a:\n        break\n\n    increment += 2\n\nprint(bytes(password))"
           },
           {
             "type": "paragraph",
-            "text": "A sandbox run would still be useful for observing configuration and command-and-control behavior, but it is no longer needed to explain the first-stage mechanics."
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "slug": "opaque-predicate-cfg",
-    "title": "Tracing an opaque predicate through a flattened CFG",
-    "summary": "How I reduced a noisy dispatcher loop into a small set of meaningful state transitions and rebuilt the function's control flow.",
-    "date": "2026.08.04",
-    "readingTime": "2 min",
-    "tags": [
-      "deobfuscation",
-      "cfg",
-      "x64"
-    ],
-    "status": "draft",
-    "isSample": true,
-    "sections": [
-      {
-        "id": "the-symptom",
-        "title": "The symptom",
-        "blocks": [
-          {
-            "type": "paragraph",
-            "text": "The target function contained dozens of basic blocks, but nearly every block returned to the same switch-like dispatcher. Conventional graph view emphasized the noise: repeated compare-and-branch sequences, state writes, and edges that appeared feasible but were never selected."
-          },
-          {
-            "type": "paragraph",
-            "text": "I stopped treating the dispatcher as ordinary control flow and instead modeled it as a state machine. Each block became a transition from an incoming state value to one or more outgoing values."
-          }
-        ]
-      },
-      {
-        "id": "proving-the-predicate",
-        "title": "Proving the predicate",
-        "blocks": [
-          {
-            "type": "paragraph",
-            "text": "One branch depended on an arithmetic expression over a value already constrained to a byte. Exhaustive evaluation over that domain showed one side was unreachable. A symbolic proof was possible, but a tiny domain table was faster to review and easier to attach to the case notes."
+            "text": "Which gives:"
           },
           {
             "type": "code",
-            "language": "python",
-            "label": "predicate_check.py",
-            "value": "def branch(value: int) -> bool:\n    value &= 0xff\n    return ((value * value + value) & 1) == 1\n\nreachable = [value for value in range(256) if branch(value)]\nassert reachable == []"
-          }
-        ]
-      },
-      {
-        "id": "reconstructing-the-graph",
-        "title": "Reconstructing the graph",
-        "blocks": [
-          {
-            "type": "paragraph",
-            "text": "After eliminating impossible transitions and collapsing pure state assignments, the apparent maze reduced to a validation routine with four decisions and a single error exit. Renaming around those decisions made the remaining data flow readable without patching the binary."
-          },
-          {
-            "type": "list",
-            "items": [
-              "Name dispatcher states by behavior, not by their numeric constants.",
-              "Remove transitions guarded by proven-invariant predicates.",
-              "Collapse blocks that only assign the next state.",
-              "Re-run data-flow analysis on the simplified graph."
-            ]
-          }
-        ]
-      },
-      {
-        "id": "what-transferred",
-        "title": "What transferred",
-        "blocks": [
-          {
-            "type": "paragraph",
-            "text": "The useful technique was not a particular deobfuscator. It was changing representations: from a hostile control-flow graph to a small transition table. That shift made invariants visible and created a reviewable path from observation to conclusion."
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "slug": "yara-config-infostealer",
-    "title": "Designing a resilient YARA rule around a config decoder",
-    "summary": "A detection note focused on stable implementation details instead of family names, packed-byte signatures, or disposable infrastructure.",
-    "date": "2026.07.22",
-    "readingTime": "2 min",
-    "tags": [
-      "yara",
-      "detection",
-      "configuration"
-    ],
-    "status": "draft",
-    "isSample": true,
-    "sections": [
-      {
-        "id": "detection-goal",
-        "title": "Detection goal",
-        "blocks": [
-          {
-            "type": "paragraph",
-            "text": "The sample family changed packers and network indicators frequently, so a useful rule had to live below those layers. The most stable candidate was its configuration decoder: a short routine that located a marker, decoded length-prefixed fields, and validated the result with a fixed checksum step."
+            "language": "text",
+            "label": "Output",
+            "value": "b'kr@meri$dab3st\\n'"
           },
           {
             "type": "paragraph",
-            "text": "I treated the rule as a hypothesis about implementation behavior, then assembled a small clean and malicious corpus to measure how well that hypothesis held."
-          }
-        ]
-      },
-      {
-        "id": "rule-sketch",
-        "title": "Rule sketch",
-        "blocks": [
-          {
-            "type": "paragraph",
-            "text": "The byte sequences above are illustrative portfolio data rather than a production signature. A real rule would include corpus-backed comments, known-good testing, and a versioned source set."
+            "text": "The final `\\n` is the newline from pressing Enter, so the actual password is:"
           },
           {
             "type": "code",
-            "language": "yara",
-            "label": "config_decoder.yar",
-            "value": "rule Config_Decoder_Structure\n{\n  meta:\n    author = \"[ blank ]\"\n    purpose = \"portfolio example\"\n\n  strings:\n    $marker = { 43 46 47 00 01 ?? ?? 00 }\n    $decode = { 0F B6 ?? ?? 33 ?? 88 ?? ?? 48 FF C? }\n\n  condition:\n    uint16(0) == 0x5A4D and\n    filesize < 2MB and\n    $marker and $decode\n}"
-          }
-        ]
-      },
-      {
-        "id": "quality-checks",
-        "title": "Quality checks",
-        "blocks": [
+            "language": "text",
+            "label": "snippet.txt",
+            "value": "kr@meri$dab3st"
+          },
           {
-            "type": "list",
-            "items": [
-              "Prefer two independent implementation anchors over one long sequence.",
-              "Document which compiler variations were tested.",
-              "Track false positives as first-class case evidence.",
-              "Keep infrastructure indicators outside the core family rule."
-            ]
+            "type": "image",
+            "src": "/posts/what-password-two-ways/screenshot-2-correct.png",
+            "alt": "Terminal showing the recovered password being accepted by the original crackme.",
+            "caption": "",
+            "width": 965,
+            "height": 68
           }
         ]
       },
       {
-        "id": "outcome",
-        "title": "Outcome",
+        "id": "skipping-the-check-instead",
+        "title": "Skipping the check instead",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "The final detection survived the alternate packer in the test set because it targeted the unpacked decoder body, while the corpus test exposed one benign collision that led to a tighter marker constraint. The result was smaller, clearer, and easier to maintain than the initial family-wide signature."
+            "text": "Recovering the password is one way to solve it. The easier way, if all you care about is reaching the success path, is to patch the conditional branch."
+          },
+          {
+            "type": "image",
+            "src": "/posts/what-password-two-ways/screenshot-3-graph.webp",
+            "alt": "Binary Ninja graph view of main showing the comparison loop and the wrong and right branches.",
+            "caption": "",
+            "width": 2400,
+            "height": 1914
+          },
+          {
+            "type": "paragraph",
+            "text": "The relevant instructions are:"
+          },
+          {
+            "type": "code",
+            "language": "asm",
+            "label": "Original control flow",
+            "value": "cmp r12b, r13b\njne wrong\ncmp r12b, 0x0a\nje right"
+          },
+          {
+            "type": "paragraph",
+            "text": "At `0x401199`, the `jne 0x4011b0` sends execution to the failure path when the bytes don't match."
+          },
+          {
+            "type": "paragraph",
+            "text": "I replaced it with an unconditional jump to the success block at `0x4011d5`:"
+          },
+          {
+            "type": "code",
+            "language": "asm",
+            "label": "Patched control flow",
+            "value": "cmp r12b, r13b\njmp right\nnop"
+          },
+          {
+            "type": "paragraph",
+            "text": "The original conditional jump was only two bytes, while the replacement `jmp` is five, so Binary Ninja overwrote the following bytes as well and padded the remainder with a `nop`."
+          },
+          {
+            "type": "evidence",
+            "items": [
+              [
+                "patch address",
+                "0x401199"
+              ],
+              [
+                "original bytes",
+                "75 15 41 80 fc 0a"
+              ],
+              [
+                "patched bytes",
+                "e9 37 00 00 00 90"
+              ],
+              [
+                "patched SHA-256",
+                "80dee3bc87b9cd5d04365041ee75be717cd3461c68f909f8cb766a9136941a30"
+              ]
+            ]
+          },
+          {
+            "type": "paragraph",
+            "text": "With that patch in place, the comparison no longer matters. Any input reaches the `Correct! You won!` branch."
+          },
+          {
+            "type": "image",
+            "src": "/posts/what-password-two-ways/screenshot-4-finished.png",
+            "alt": "Terminal showing the patched crackme accepting a one-character input.",
+            "caption": "",
+            "width": 959,
+            "height": 67
           }
         ]
       }

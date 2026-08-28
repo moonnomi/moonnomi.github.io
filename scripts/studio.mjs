@@ -1,9 +1,11 @@
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { copyFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { comparePostRecency } from "../shared/post-order.js";
+import { publishLive } from "./live-publish.mjs";
+import { createPostRepository } from "./post-repository.mjs";
 
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
 const studioRoot = path.join(projectRoot, "studio");
@@ -35,9 +37,8 @@ class RequestError extends Error {
 }
 
 function constantTimeEqual(leftValue, rightValue) {
-  const left = Buffer.from(String(leftValue));
-  const right = Buffer.from(String(rightValue));
-  if (left.length !== right.length) return false;
+  const left = createHash("sha256").update(String(leftValue)).digest();
+  const right = createHash("sha256").update(String(rightValue)).digest();
   return timingSafeEqual(left, right);
 }
 
@@ -492,6 +493,9 @@ async function writeJson(filePath, label, value, targetBackupRoot = backupRoot) 
 }
 
 async function readBody(request, limit = 512_000) {
+  if (!String(request.headers["content-type"] ?? "").toLowerCase().startsWith("application/json")) {
+    throw new RequestError(415, "Write requests must use application/json.");
+  }
   let size = 0;
   const chunks = [];
   for await (const chunk of request) {
@@ -507,7 +511,7 @@ async function readBody(request, limit = 512_000) {
   }
 }
 
-function normalizeImageUpload(value) {
+export function normalizeImageUpload(value) {
   const postSlug = slugify(value.postSlug);
   if (!postSlug || postSlug !== String(value.postSlug ?? "")) {
     throw new RequestError(400, "Save the post with a valid slug before uploading an image.");
@@ -540,7 +544,7 @@ function normalizeImageUpload(value) {
   };
 }
 
-async function writeUniqueImage(targetPublicRoot, upload) {
+export async function writeUniqueImage(targetPublicRoot, upload) {
   const directory = path.resolve(targetPublicRoot, "posts", upload.postSlug);
   const relativeDirectory = path.relative(targetPublicRoot, directory);
   if (relativeDirectory.startsWith("..") || path.isAbsolute(relativeDirectory)) {
@@ -588,10 +592,28 @@ export async function startStudio(options = {}) {
   const activeSitePath = path.resolve(options.sitePath ?? sitePath);
   const activeBackupRoot = path.resolve(options.backupRoot ?? backupRoot);
   const activePublicRoot = path.resolve(options.publicRoot ?? publicRoot);
+  const activeDraftsPath = path.resolve(
+    options.draftsPath ?? path.join(path.dirname(activeBackupRoot), "drafts.json"),
+  );
+  const livePublisher = options.publishLive ?? publishLive;
   const sessionTokens = new Map();
   const allowedHosts = new Set(["127.0.0.1:" + port, "localhost:" + port]);
   const allowedOrigins = new Set(["http://127.0.0.1:" + port, "http://localhost:" + port]);
   let mutationQueue = Promise.resolve();
+  let deploymentInProgress = false;
+  let failedLoginAttempts = 0;
+  let loginBlockedUntil = 0;
+
+  const postRepository = createPostRepository({
+    postsPath: activePostsPath,
+    draftsPath: activeDraftsPath,
+    backupRoot: activeBackupRoot,
+    preservePublicationTime,
+  });
+  const migration = await postRepository.migrateDrafts();
+  if (migration.migrated) {
+    console.log(`Moved ${migration.migrated} draft post(s) into local Studio storage.`);
+  }
 
   const serializeMutation = (operation) => {
     const pending = mutationQueue.then(operation, operation);
@@ -619,6 +641,9 @@ export async function startStudio(options = {}) {
     response.setHeader("X-Content-Type-Options", "nosniff");
     response.setHeader("Referrer-Policy", "no-referrer");
     response.setHeader("X-Frame-Options", "DENY");
+    response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    response.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+    response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
     response.setHeader(
       "Content-Security-Policy",
       "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
@@ -679,9 +704,20 @@ export async function startStudio(options = {}) {
 
       if (request.method === "POST" && pathname === "/api/login") {
         requireOrigin(request);
+        if (Date.now() < loginBlockedUntil) {
+          throw new RequestError(429, "Too many failed sign-in attempts. Wait a moment and try again.");
+        }
         const body = await readBody(request, 8_000);
         if (!constantTimeEqual(body.password ?? "", studioPassword)) {
+          failedLoginAttempts += 1;
+          const delay = Math.min(30_000, 250 * (2 ** Math.min(failedLoginAttempts - 1, 7)));
+          loginBlockedUntil = Date.now() + delay;
           throw new RequestError(401, "That password is not correct.");
+        }
+        failedLoginAttempts = 0;
+        loginBlockedUntil = 0;
+        for (const [token, expiresAt] of sessionTokens) {
+          if (expiresAt < Date.now()) sessionTokens.delete(token);
         }
         const token = randomBytes(32).toString("base64url");
         sessionTokens.set(token, Date.now() + 8 * 60 * 60 * 1000);
@@ -706,12 +742,10 @@ export async function startStudio(options = {}) {
       }
 
       if (request.method === "GET" && pathname === "/api/state") {
-        const [site, posts] = await Promise.all([readJson(activeSitePath), readJson(activePostsPath)]);
+        const [site, posts] = await Promise.all([readJson(activeSitePath), postRepository.list()]);
         sendJson(response, 200, {
           site,
-          posts: posts
-            .map(editorPost)
-            .sort(comparePostRecency),
+          posts: posts.map(editorPost).sort(comparePostRecency),
           publicUrl: "http://localhost:3000/",
         });
         return;
@@ -730,32 +764,16 @@ export async function startStudio(options = {}) {
         const body = await readBody(request);
         let post = normalizePost(body.post ?? body);
         const originalSlug = slugify(body.originalSlug ?? "");
-        let existingIndex = -1;
-        await serializeMutation(async () => {
-          const posts = await readJson(activePostsPath);
-          existingIndex = originalSlug
-            ? posts.findIndex((item) => item.slug === originalSlug)
-            : -1;
-          post = preservePublicationTime(post, posts[existingIndex]);
-          const collision = posts.some(
-            (item, index) => item.slug === post.slug && index !== existingIndex,
-          );
-          if (collision) throw new RequestError(409, "Another post already uses that slug.");
-
-          if (existingIndex >= 0) posts[existingIndex] = post;
-          else posts.push(post);
-          posts.sort(comparePostRecency);
-          await writeJson(activePostsPath, "posts", posts, activeBackupRoot);
-        });
-        sendJson(response, existingIndex >= 0 ? 200 : 201, { post: editorPost(post) });
+        const saved = await postRepository.save(originalSlug, post);
+        post = saved.post;
+        sendJson(response, saved.created ? 201 : 200, { post: editorPost(post) });
         return;
       }
 
       if (request.method === "POST" && pathname === "/api/images") {
         requireOrigin(request);
         const upload = normalizeImageUpload(await readBody(request, 12_000_000));
-        const posts = await readJson(activePostsPath);
-        if (!posts.some((post) => post.slug === upload.postSlug)) {
+        if (!await postRepository.find(upload.postSlug)) {
           throw new RequestError(404, "Save the post before uploading its first image.");
         }
         const src = await serializeMutation(() => writeUniqueImage(activePublicRoot, upload));
@@ -763,22 +781,51 @@ export async function startStudio(options = {}) {
         return;
       }
 
+      if (request.method === "POST" && pathname === "/api/deploy") {
+        requireOrigin(request);
+        if (deploymentInProgress) throw new RequestError(409, "A live publish is already running.");
+        const body = await readBody(request, 8_000);
+        const postSlug = slugify(body.postSlug ?? "");
+        if (!postSlug || body.confirmation !== postSlug) {
+          throw new RequestError(400, "Type the exact post slug to confirm live publishing.");
+        }
+        const post = await postRepository.find(postSlug);
+        if (!post || post.status !== "published") {
+          throw new RequestError(409, "Save the post with Published status before publishing it live.");
+        }
+        deploymentInProgress = true;
+        try {
+          try {
+            const result = await livePublisher({
+              projectRoot,
+              slug: postSlug,
+              confirmed: true,
+            });
+            sendJson(response, 200, result);
+          } catch (error) {
+            throw new RequestError(409, error instanceof Error ? error.message : "Live publishing failed.");
+          }
+        } finally {
+          deploymentInProgress = false;
+        }
+        return;
+      }
+
       if (request.method === "DELETE" && pathname.startsWith("/api/posts/")) {
         requireOrigin(request);
         const slug = slugify(decodeURIComponent(pathname.slice("/api/posts/".length)));
-        await serializeMutation(async () => {
-          const posts = await readJson(activePostsPath);
-          const nextPosts = posts.filter((item) => item.slug !== slug);
-          if (nextPosts.length === posts.length) throw new RequestError(404, "Post not found.");
-          await writeJson(activePostsPath, "posts", nextPosts, activeBackupRoot);
-        });
+        await postRepository.remove(slug);
         sendJson(response, 200, { ok: true });
         return;
       }
 
       throw new RequestError(404, "Not found.");
     } catch (error) {
-      const status = error instanceof RequestError ? error.status : 500;
+      const status = error instanceof RequestError
+        ? error.status
+        : Number.isInteger(error?.status)
+          ? error.status
+          : 500;
       const message = error instanceof RequestError ? error.message : "The studio hit an unexpected error.";
       if (status === 500) console.error(error);
       sendJson(response, status, { error: message });
